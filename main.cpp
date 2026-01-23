@@ -1,10 +1,12 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/quaternion.hpp>
 
 #include <raylib.h>
 #include <raymath.h>
+#include <rlgl.h>
 
 #include <iostream>
 #include <vector>
@@ -71,10 +73,16 @@ Matrix getMatrix(const glm::mat4& m) {
 }
 
 void drawPlane(const Plane& plane) {
-    auto transform  = getPlaneTransform(plane);
-    model.transform = getMatrix(transform);
+    auto transform = getPlaneTransform(plane);
+    //model.transform = getMatrix(transform);
 
-    DrawModel(model, {0, 0, 0}, 1, WHITE);
+    //DrawModel(model, {0, 0, 0}, 1, WHITE);
+    rlPushMatrix();
+    {
+        rlMultMatrixf(glm::value_ptr(transform));
+        DrawPlane({0, 0, 0}, {1, 1}, RED);
+    }
+    rlPopMatrix();
 }
 
 void updatePosition(Particle& particle, float dt) { particle.position += glm::vec3(0, -1, 0) * dt; }
@@ -117,7 +125,7 @@ int main() {
 
     model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
 
-    Plane plane{{3, 3}, {3, 0, 0}, {1, 0, 0}};
+    Plane plane{{3, 3}, {3, 0, 0}, {-1, 0, 0}};
 
     while (!WindowShouldClose()) {
         float dt = GetFrameTime();
