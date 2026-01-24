@@ -41,7 +41,7 @@ void Renderer::drawParticle(const Particle& particle) {
     rlPushMatrix();
     {
         rlMultMatrixf(glm::value_ptr(transform));
-        DrawModel(m_sphereModel, {0, 0, 0}, 1, WHITE);
+        DrawModel(m_sphereModel, {0, 0, 0}, 1, particle.color);
     }
     rlPopMatrix();
 }
@@ -75,7 +75,7 @@ void Renderer::generateSphereMesh() {
     Mesh mesh     = GenMeshSphere(1, 16, 16);
     m_sphereModel = LoadModelFromMesh(mesh);
 
-    auto image   = GenImageColor(1, 1, BLUE);
+    auto image   = GenImageColor(1, 1, WHITE);
     auto texture = LoadTextureFromImage(image);
 
     m_sphereModel.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture;

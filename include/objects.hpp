@@ -1,5 +1,6 @@
 #pragma once
 
+#include <raylib.h>
 #include <glm/glm.hpp>
 
 struct Plane {
@@ -13,4 +14,6 @@ struct Particle {
     glm::vec3 position{};
     glm::vec3 velocity{};
     glm::vec3 acceleration{};
+
+    Color color;
 };

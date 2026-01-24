@@ -29,6 +29,16 @@ static glm::vec3 getRandomPosition() {
     return glm::normalize(glm::vec3(distHori(gen), distVert(gen), distHori(gen)));
 }
 
+
+static constexpr std::array<Color, 7> colors {RED, BLUE, GREEN, YELLOW, MAGENTA, VIOLET, ORANGE};
+
+static Color getRandomColor() {
+    static std::mt19937 gen(std::random_device{}());
+    static std::uniform_int_distribution<int> dist(0, 6);
+
+    return colors[dist(gen)];
+}
+
 int main() {
     const int ScreenWidth  = 800;
     const int ScreenHeight = 600;
@@ -59,13 +69,14 @@ int main() {
     obstacles.push_back(backPlane);
     obstacles.push_back(frontPlane);
 
-    const int ParticleNumber = 1000;
+    const int ParticleNumber = 100;
     Particle particle;
     std::vector<Particle> particles;
     for (int i = 0; i < ParticleNumber; i++) {
         particle.radius    = 0.25f;
         particle.position  = getRandomPosition();
         particle.velocity  = getRandomDirection() * 10.f;
+        particle.color     = getRandomColor();
 
         particles.push_back(particle);
     }

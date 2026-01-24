@@ -85,8 +85,8 @@ void Simulation::resolveCollisions(Particle& particle) {
 
             solvePenetration(particle, secondParticle);
 
-            particle.velocity       = glm::reflect(particle.velocity, normal) * 0.99f;
-            secondParticle.velocity = glm::reflect(secondParticle.velocity, normal) * 0.99f;
+            particle.velocity       = glm::reflect(particle.velocity, normal) * 0.98f;
+            secondParticle.velocity = glm::reflect(secondParticle.velocity, normal) * 0.98f;
         }
     }
 }
