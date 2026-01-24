@@ -1,96 +1,32 @@
+#include "objects.hpp"
+#include "renderer.hpp"
+#include "simulation.hpp"
+
 #define GLM_ENABLE_EXPERIMENTAL
-#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/quaternion.hpp>
 
 #include <raylib.h>
-#include <raymath.h>
+#include <rcamera.h>
 #include <rlgl.h>
 
-#include <iostream>
+#include <random>
 #include <vector>
 
-Mesh mesh;
-Model model;
-Texture texture;
+static glm::vec3 getRandomDirection() {
+    static std::mt19937 gen(std::random_device{}());
+    static std::normal_distribution<float> dist(-1.0f, 1.0f);
 
-Vector3 toVector3(glm::vec3 value) { return {value.x, value.y, value.z}; }
-
-struct Plane {
-    glm::vec2 size;
-    glm::vec3 position;
-    glm::vec3 normal;
-};
-
-struct Particle {
-    float radius;
-    glm::vec3 position;
-};
-
-void drawParticle(const Particle& particle) {
-    DrawSphere(toVector3(particle.position), particle.radius, BLUE);
+    return glm::normalize(glm::vec3(dist(gen), dist(gen), dist(gen)));
 }
 
-void drawParticles(const std::vector<Particle*>& particles) {
-    for (const auto& particle: particles) {
-        drawParticle(*particle);
-    }
-}
+static glm::vec3 getRandomPosition() {
+    static std::mt19937 gen(std::random_device{}());
+    static std::uniform_real_distribution<float> distVert(1.0f, 9.0f);
+    static std::uniform_real_distribution<float> distHori(-4.0f, 4.0f);
 
-glm::mat4 getPlaneTransform(const Plane& plane) {
-    auto translate = glm::translate({1}, plane.position);
-    auto rotation  = glm::mat4_cast(glm::rotation({0, 1, 0}, plane.normal));
-    auto scale     = glm::scale({1}, glm::vec3{plane.size.x, 1, plane.size.y});
-
-    return translate * rotation * scale;
-}
-
-Matrix getMatrix(const glm::mat4& m) {
-    Matrix r;
-
-    r.m0 = m[0][0];
-    r.m1 = m[0][1];
-    r.m2 = m[0][2];
-    r.m3 = m[0][3];
-
-    r.m4 = m[1][0];
-    r.m5 = m[1][1];
-    r.m6 = m[1][2];
-    r.m7 = m[1][3];
-
-    r.m8  = m[2][0];
-    r.m9  = m[2][1];
-    r.m10 = m[2][2];
-    r.m11 = m[2][3];
-
-    r.m12 = m[3][0];
-    r.m13 = m[3][1];
-    r.m14 = m[3][2];
-    r.m15 = m[3][3];
-
-    return r;
-}
-
-void drawPlane(const Plane& plane) {
-    auto transform = getPlaneTransform(plane);
-    //model.transform = getMatrix(transform);
-
-    //DrawModel(model, {0, 0, 0}, 1, WHITE);
-    rlPushMatrix();
-    {
-        rlMultMatrixf(glm::value_ptr(transform));
-        DrawPlane({0, 0, 0}, {1, 1}, RED);
-    }
-    rlPopMatrix();
-}
-
-void updatePosition(Particle& particle, float dt) { particle.position += glm::vec3(0, -1, 0) * dt; }
-
-void updateParticles(std::vector<Particle*>& particles, float dt) {
-    for (auto& particle: particles) {
-        updatePosition(*particle, dt);
-    }
+    return glm::normalize(glm::vec3(distHori(gen), distVert(gen), distHori(gen)));
 }
 
 int main() {
@@ -108,29 +44,52 @@ int main() {
 
     SetTargetFPS(60);
 
-    Particle p1{.5f, {0, 3, 0}};
-    Particle p2{.5f, {5, 3, 0}};
-    Particle p3{.5f, {-5, 3, 0}};
+    Plane bottomPlane{{10, 10}, {0, 0, 0}, {0, 1, 0}};
+    Plane topPlane{{10, 10}, {0, 10, 0}, {0, -1, 0}};
+    Plane leftPlane({10, 10}, {-5, 5, 0}, {1, 0, 0});
+    Plane rightPlane({10, 10}, {5, 5, 0}, {-1, 0, 0});
+    Plane backPlane({10, 10}, {0, 5, -5}, {0, 0, 1});
+    Plane frontPlane({10, 10}, {0, 5, 5}, {0, 0, -1});
 
-    std::vector<Particle*> particles;
-    particles.push_back(&p1);
-    particles.push_back(&p2);
-    particles.push_back(&p3);
+    std::vector<Plane> obstacles;
+    obstacles.push_back(bottomPlane);
+    obstacles.push_back(topPlane);
+    obstacles.push_back(leftPlane);
+    obstacles.push_back(rightPlane);
+    obstacles.push_back(backPlane);
+    obstacles.push_back(frontPlane);
 
-    mesh  = GenMeshPlane(1, 1, 1, 1);
-    model = LoadModelFromMesh(mesh);
+    const int ParticleNumber = 1000;
+    Particle particle;
+    std::vector<Particle> particles;
+    for (int i = 0; i < ParticleNumber; i++) {
+        particle.radius    = 0.25f;
+        particle.position  = getRandomPosition();
+        particle.velocity  = getRandomDirection() * 10.f;
 
-    auto image = GenImageColor(1, 1, RED);
-    texture    = LoadTextureFromImage(image);
+        particles.push_back(particle);
+    }
 
-    model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
+    Renderer renderer(particles, obstacles);
+    Simulation simulation(particles, obstacles);
 
-    Plane plane{{3, 3}, {3, 0, 0}, {-1, 0, 0}};
-
+    bool movingCam{};
     while (!WindowShouldClose()) {
         float dt = GetFrameTime();
 
-        updateParticles(particles, dt);
+        if (IsKeyPressed(KEY_Z) && !movingCam) {
+            movingCam = true;
+            DisableCursor();
+        } else if (IsKeyPressed(KEY_Z) && movingCam) {
+            movingCam = false;
+            EnableCursor();
+        }
+
+        if (movingCam) {
+            UpdateCamera(&camera, CAMERA_FREE);
+        }
+
+        simulation.update(dt);
 
         BeginDrawing();
         {
@@ -138,8 +97,7 @@ int main() {
 
             BeginMode3D(camera);
             {
-                drawParticles(particles);
-                drawPlane(plane);
+                renderer.draw();
                 DrawGrid(100, 1.f);
             }
             EndMode3D();

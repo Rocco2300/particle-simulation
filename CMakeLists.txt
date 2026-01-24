@@ -21,8 +21,12 @@ FetchContent_MakeAvailable(glm)
 add_executable(
         particle_simulation
         main.cpp
+        sources/renderer.cpp
+        sources/simulation.cpp
 )
 
 set_property(TARGET particle_simulation PROPERTY COMPILE_WARNING_AS_ERROR ON)
+
+target_include_directories(particle_simulation PRIVATE include)
 
 target_link_libraries(particle_simulation PRIVATE raylib glm)
