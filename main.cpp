@@ -14,29 +14,20 @@
 #include <random>
 #include <vector>
 
-static glm::vec3 getRandomDirection() {
-    static std::mt19937 gen(std::random_device{}());
-    static std::normal_distribution<float> dist(-1.0f, 1.0f);
-
-    return glm::normalize(glm::vec3(dist(gen), dist(gen), dist(gen)));
-}
-
-static glm::vec3 getRandomPosition() {
-    static std::mt19937 gen(std::random_device{}());
-    static std::uniform_real_distribution<float> distVert(1.0f, 9.0f);
-    static std::uniform_real_distribution<float> distHori(-4.0f, 4.0f);
-
-    return glm::normalize(glm::vec3(distHori(gen), distVert(gen), distHori(gen)));
-}
-
-
-static constexpr std::array<Color, 7> colors {RED, BLUE, GREEN, YELLOW, MAGENTA, VIOLET, ORANGE};
+static constexpr std::array<Color, 7> colors{RED, BLUE, GREEN, YELLOW, MAGENTA, VIOLET, ORANGE};
 
 static Color getRandomColor() {
     static std::mt19937 gen(std::random_device{}());
     static std::uniform_int_distribution<int> dist(0, 6);
 
     return colors[dist(gen)];
+}
+
+static glm::vec3 getRandomVectorOffset() {
+    static std::mt19937 gen(std::random_device{}());
+    static std::normal_distribution<float> dist(-1.f, 1.f);
+
+    return glm::vec3(dist(gen), dist(gen), dist(gen));
 }
 
 int main() {
@@ -52,7 +43,7 @@ int main() {
     camera.fovy       = 45.f;
     camera.projection = CAMERA_PERSPECTIVE;
 
-    SetTargetFPS(60);
+    //SetTargetFPS(60);
 
     Plane bottomPlane{{10, 10}, {0, 0, 0}, {0, 1, 0}};
     Plane topPlane{{10, 10}, {0, 10, 0}, {0, -1, 0}};
@@ -69,24 +60,27 @@ int main() {
     obstacles.push_back(backPlane);
     obstacles.push_back(frontPlane);
 
-    const int ParticleNumber = 100;
+    const int ParticleNumber = 10;
     Particle particle;
     std::vector<Particle> particles;
-    for (int i = 0; i < ParticleNumber; i++) {
-        particle.radius    = 0.25f;
-        particle.position  = getRandomPosition();
-        particle.velocity  = getRandomDirection() * 10.f;
-        particle.color     = getRandomColor();
+    //for (int i = 0; i < ParticleNumber; i++) {
+    //    particle.radius   = 0.25f;
+    //    particle.position = getRandomPosition();
+    //    particle.velocity = getRandomDirection() * 20.f;
+    //    particle.color    = getRandomColor();
 
-        particles.push_back(particle);
-    }
+    //    particles.push_back(particle);
+    //}
 
     Renderer renderer(particles, obstacles);
     Simulation simulation(particles, obstacles);
 
     bool movingCam{};
+    const float SpawnTime = 0.050f;
+    float time = SpawnTime;
     while (!WindowShouldClose()) {
         float dt = GetFrameTime();
+        time -= dt;
 
         if (IsKeyPressed(KEY_Z) && !movingCam) {
             movingCam = true;
@@ -98,6 +92,23 @@ int main() {
 
         if (movingCam) {
             UpdateCamera(&camera, CAMERA_FREE);
+        }
+
+        if (IsKeyPressedRepeat(KEY_X)) {
+            if (time <= 0.f) {
+                auto position = glm::vec3(4, 8, -4);
+                auto velocity =
+                        glm::normalize(glm::vec3(-1, -1, 1) + getRandomVectorOffset()) * 20.f;
+
+                particle.radius   = 0.25f;
+                particle.position = position;
+                particle.velocity = velocity;
+                particle.color    = getRandomColor();
+
+                particles.push_back(particle);
+
+                time = SpawnTime;
+            }
         }
 
         simulation.update(dt);
@@ -113,8 +124,9 @@ int main() {
             }
             EndMode3D();
 
-            DrawText("Welcome to the 3rd dimension", 10, 40, 20, DARKGRAY);
             DrawFPS(10, 10);
+            std::string particleNo = std::to_string(particles.size());
+            DrawText(particleNo.c_str(), 10, 36, 24, DARKGREEN);
         }
         EndDrawing();
     }

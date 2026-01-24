@@ -10,11 +10,11 @@ Simulation::Simulation(std::vector<Particle>& particles, std::vector<Plane>& obs
     , m_particles{&particles} {}
 
 void Simulation::update(float deltaTime) {
-    const int steps   = 1;
+    const int steps   = 10;
     auto subDeltaTime = deltaTime / steps;
     for (int i = 1; i <= steps; i++) {
         for (auto& particle: *m_particles) {
-            applyForces(particle, deltaTime);
+            applyForces(particle, subDeltaTime);
             clampVelocity(particle);
             moveParticle(particle, subDeltaTime);
             resolveCollisions(particle);
@@ -29,7 +29,7 @@ void Simulation::applyForces(Particle& particle, float deltaTime) {
 }
 
 void Simulation::clampVelocity(Particle& particle) {
-    if (particle.velocity.length() >= 16.f) {
+    if (particle.velocity.length() >= 25.f) {
         particle.velocity = glm::normalize(particle.velocity) * 16.f;
     }
 }
@@ -48,7 +48,7 @@ static bool isColliding(Particle& particle, Plane& plane) {
 
 static void solvePenetration(Particle& particle, Plane& plane) {
     auto distance   = getSignedDistance(particle, plane);
-    auto moveAmount = particle.radius - distance;
+    auto moveAmount = particle.radius - distance + 0.0001f;
     particle.position += plane.normal * moveAmount;
 }
 
@@ -67,21 +67,25 @@ static void solvePenetration(Particle& p1, Particle& p2) {
     auto distance = glm::distance(p1.position, p2.position);
     auto moveAmount = p1.radius + p2.radius - distance;
 
-    p1.position += normal * -(moveAmount / 2);
-    p2.position += normal * (moveAmount / 2);
+    p1.position += normal * -((moveAmount / 2) + 0.0001f);
+    p2.position += normal * ((moveAmount / 2) + 0.0001f);
 }
 
 void Simulation::resolveCollisions(Particle& particle) {
+    const float Restitution = 0.984f;
+
     for (auto& plane: *m_obstacles) {
         if (isColliding(particle, plane)) {
             solvePenetration(particle, plane);
-            particle.velocity = glm::reflect(particle.velocity, plane.normal) * 0.96f;
+            particle.velocity = glm::reflect(particle.velocity, plane.normal);
         }
     }
 
     for (auto& secondParticle: *m_particles) {
         if (particle.position != secondParticle.position && isColliding(particle, secondParticle)) {
             auto normal = glm::normalize(secondParticle.position - particle.position);
+            auto distance = glm::distance(particle.position, secondParticle.position);
+            auto penetrationDistance = particle.radius + secondParticle.radius - distance;
 
             solvePenetration(particle, secondParticle);
 
