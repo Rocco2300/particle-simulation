@@ -43,7 +43,7 @@ static float getSignedDistance(Particle& particle, Plane& plane) {
 }
 
 static bool isColliding(Particle& particle, Plane& plane) {
-    return getSignedDistance(particle, plane) <= particle.radius;
+    return getSignedDistance(particle, plane) < particle.radius;
 }
 
 static void solvePenetration(Particle& particle, Plane& plane) {
@@ -55,7 +55,7 @@ static void solvePenetration(Particle& particle, Plane& plane) {
 static bool isColliding(Particle& p1, Particle& p2) {
     auto distance = glm::distance(p1.position, p2.position);
 
-    if (distance <= p1.radius + p2.radius) {
+    if (distance < p1.radius + p2.radius) {
         return true;
     }
 
@@ -72,12 +72,10 @@ static void solvePenetration(Particle& p1, Particle& p2) {
 }
 
 void Simulation::resolveCollisions(Particle& particle) {
-    const float Restitution = 0.984f;
-
     for (auto& plane: *m_obstacles) {
         if (isColliding(particle, plane)) {
             solvePenetration(particle, plane);
-            particle.velocity = glm::reflect(particle.velocity, plane.normal);
+            particle.velocity = glm::reflect(particle.velocity, plane.normal) * 0.8f;
         }
     }
 
@@ -85,12 +83,11 @@ void Simulation::resolveCollisions(Particle& particle) {
         if (particle.position != secondParticle.position && isColliding(particle, secondParticle)) {
             auto normal = glm::normalize(secondParticle.position - particle.position);
             auto distance = glm::distance(particle.position, secondParticle.position);
-            auto penetrationDistance = particle.radius + secondParticle.radius - distance;
 
             solvePenetration(particle, secondParticle);
 
-            particle.velocity       = glm::reflect(particle.velocity, normal) * 0.98f;
-            secondParticle.velocity = glm::reflect(secondParticle.velocity, normal) * 0.98f;
+            particle.velocity       = glm::reflect(particle.velocity, normal) * 0.9f;
+            secondParticle.velocity = glm::reflect(secondParticle.velocity, normal) * 0.9f;
         }
     }
 }
