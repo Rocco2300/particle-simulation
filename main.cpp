@@ -14,6 +14,7 @@
 #include <random>
 #include <vector>
 
+static constexpr float Offset = 1.0f;
 static constexpr std::array<Color, 7> colors{RED, BLUE, GREEN, YELLOW, MAGENTA, VIOLET, ORANGE};
 
 static Color getRandomColor() {
@@ -28,6 +29,27 @@ static glm::vec3 getRandomVectorOffset() {
     static std::normal_distribution<float> dist(-1.f, 1.f);
 
     return glm::vec3(dist(gen), dist(gen), dist(gen));
+}
+
+static glm::vec3 getRandomDirection() {
+    constexpr std::array<glm::vec3, 8> directions{
+            {{1, 1, 1},
+             {1, 1, -1},
+             {1, -1, 1},
+             {1, -1, -1},
+             {-1, 1, 1},
+             {-1, 1, -1},
+             {-1, -1, 1},
+             {-1, -1, -1}}
+    };
+
+    static std::mt19937 gen(std::random_device{}());
+    static std::uniform_int_distribution<int> dist(0, 7);
+
+    auto direction = directions[dist(gen)];
+    direction += getRandomVectorOffset();
+
+    return glm::normalize(direction);
 }
 
 int main() {
@@ -60,24 +82,27 @@ int main() {
     obstacles.push_back(backPlane);
     obstacles.push_back(frontPlane);
 
-    const int ParticleNumber = 10;
     Particle particle;
     std::vector<Particle> particles;
-    //for (int i = 0; i < ParticleNumber; i++) {
-    //    particle.radius   = 0.25f;
-    //    particle.position = getRandomPosition();
-    //    particle.velocity = getRandomDirection() * 20.f;
-    //    particle.color    = getRandomColor();
+    for (float y = 1.0f; y <= 9.0f; y += Offset) {
+        for (float x = -4.0f; x <= 4.0f; x += Offset) {
+            for (float z = -4.0f; z <= 4.0f; z += Offset) {
+                particle.radius   = 0.25f;
+                particle.position = glm::vec3(x, y, z);
+                particle.velocity = getRandomDirection() * 20.f;
+                particle.color    = getRandomColor();
 
-    //    particles.push_back(particle);
-    //}
+                particles.push_back(particle);
+            }
+        }
+    }
 
     Renderer renderer(particles, obstacles);
     Simulation simulation(particles, obstacles);
 
     bool movingCam{};
     const float SpawnTime = 0.050f;
-    float time = SpawnTime;
+    float time            = SpawnTime;
     while (!WindowShouldClose()) {
         float dt = GetFrameTime();
         time -= dt;
@@ -108,6 +133,12 @@ int main() {
                 particles.push_back(particle);
 
                 time = SpawnTime;
+            }
+        }
+
+        if (IsKeyPressed(KEY_C)) {
+            for (auto& p : particles) {
+                p.velocity = getRandomDirection() * 100.f;
             }
         }
 

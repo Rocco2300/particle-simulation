@@ -17,3 +17,14 @@ struct Particle {
 
     Color color;
 };
+
+constexpr int MaxParticles = 4096;
+
+struct ParticleData {
+    float radius[4096];
+    glm::vec3 position[4096];
+    glm::vec3 velocity[4096];
+    glm::vec4 acceleration[4096];
+
+    Color color[4096];
+};
