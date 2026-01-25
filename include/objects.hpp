@@ -3,12 +3,23 @@
 #include <raylib.h>
 #include <glm/glm.hpp>
 
-struct Global {
+struct PlanesGlobalData {
+    uint32_t sizeSSBO;
+    uint32_t normalSSBO;
+    uint32_t positionSSBO;
+};
+
+struct ParticlesGlobalData {
     uint32_t radiusSSBO;
     uint32_t positionSSBO;
     uint32_t velocitySSBO;
     uint32_t accelerationSSBO;
     uint32_t colorSSBO;
+};
+
+struct Global {
+    PlanesGlobalData planes;
+    ParticlesGlobalData particles;
 };
 
 extern Global global;

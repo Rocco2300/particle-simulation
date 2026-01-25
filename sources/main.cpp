@@ -63,7 +63,7 @@ int main() {
     //SetTargetFPS(60);
 
     PlaneData planeData;
-    planeData.count = 6;
+    planeData.count   = 6;
     planeData.size[0] = {10, 10};
     planeData.size[1] = {10, 10};
     planeData.size[2] = {10, 10};
@@ -100,11 +100,15 @@ int main() {
     }
 
     // clang-format off
-    global.radiusSSBO = rlLoadShaderBuffer(sizeof(particleData.radius), nullptr, RL_DYNAMIC_COPY);
-    global.positionSSBO = rlLoadShaderBuffer(sizeof(particleData.position), nullptr, RL_DYNAMIC_COPY);
-    global.velocitySSBO = rlLoadShaderBuffer(sizeof(particleData.velocity), nullptr, RL_DYNAMIC_COPY);
-    global.accelerationSSBO = rlLoadShaderBuffer(sizeof(particleData.acceleration), nullptr, RL_DYNAMIC_COPY);
-    global.colorSSBO = rlLoadShaderBuffer(sizeof(particleData.color), nullptr, RL_DYNAMIC_COPY);
+    global.planes.sizeSSBO = rlLoadShaderBuffer(sizeof(planeData.size), nullptr, RL_DYNAMIC_COPY);
+    global.planes.normalSSBO = rlLoadShaderBuffer(sizeof(planeData.normal), nullptr, RL_DYNAMIC_COPY);
+    global.planes.positionSSBO = rlLoadShaderBuffer(sizeof(planeData.position), nullptr, RL_DYNAMIC_COPY);
+
+    global.particles.radiusSSBO = rlLoadShaderBuffer(sizeof(particleData.radius), nullptr, RL_DYNAMIC_COPY);
+    global.particles.positionSSBO = rlLoadShaderBuffer(sizeof(particleData.position), nullptr, RL_DYNAMIC_COPY);
+    global.particles.velocitySSBO = rlLoadShaderBuffer(sizeof(particleData.velocity), nullptr, RL_DYNAMIC_COPY);
+    global.particles.accelerationSSBO = rlLoadShaderBuffer(sizeof(particleData.acceleration), nullptr, RL_DYNAMIC_COPY);
+    global.particles.colorSSBO = rlLoadShaderBuffer(sizeof(particleData.color), nullptr, RL_DYNAMIC_COPY);
     // clang-format on
 
     Renderer renderer(camera, particleData, planeData);

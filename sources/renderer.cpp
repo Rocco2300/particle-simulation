@@ -86,8 +86,8 @@ void Renderer::drawParticle(Particle particle) {
 void Renderer::drawParticles() {
     BeginShaderMode(m_shader);
     {
-        rlBindShaderBuffer(global.positionSSBO, 0);
-        rlBindShaderBuffer(global.colorSSBO, 1);
+        rlBindShaderBuffer(global.particles.positionSSBO, 0);
+        rlBindShaderBuffer(global.particles.colorSSBO, 1);
 
         float aspect    = (float) GetScreenWidth() / (float) GetScreenHeight();
         auto view       = GetCameraViewMatrix(m_camera);
@@ -98,14 +98,14 @@ void Renderer::drawParticles() {
         SetShaderValue(m_shader, m_countLoc, &m_particleData->count, SHADER_UNIFORM_INT);
 
         rlUpdateShaderBuffer(
-                global.positionSSBO,
+                global.particles.positionSSBO,
                 &m_particleData->position,
                 sizeof(m_particleData->position),
                 0
         );
 
         rlUpdateShaderBuffer(
-                global.colorSSBO,
+                global.particles.colorSSBO,
                 &m_particleData->color,
                 sizeof(m_particleData->color),
                 0
