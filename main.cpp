@@ -82,23 +82,22 @@ int main() {
     obstacles.push_back(backPlane);
     obstacles.push_back(frontPlane);
 
-    Particle particle;
-    std::vector<Particle> particles;
+    ParticleData particleData;
     for (float y = 1.0f; y <= 9.0f; y += Offset) {
         for (float x = -4.0f; x <= 4.0f; x += Offset) {
             for (float z = -4.0f; z <= 4.0f; z += Offset) {
-                particle.radius   = 0.25f;
-                particle.position = glm::vec3(x, y, z);
-                particle.velocity = getRandomDirection() * 20.f;
-                particle.color    = getRandomColor();
+                particleData.radius[particleData.count]   = 0.25f;
+                particleData.position[particleData.count] = glm::vec3(x, y, z);
+                particleData.velocity[particleData.count] = getRandomDirection() * 20.f;
+                particleData.color[particleData.count]    = getRandomColor();
 
-                particles.push_back(particle);
+                particleData.count ++;
             }
         }
     }
 
-    Renderer renderer(particles, obstacles);
-    Simulation simulation(particles, obstacles);
+    Renderer renderer(particleData, obstacles);
+    Simulation simulation(particleData, obstacles);
 
     bool movingCam{};
     const float SpawnTime = 0.050f;
@@ -125,20 +124,18 @@ int main() {
                 auto velocity =
                         glm::normalize(glm::vec3(-1, -1, 1) + getRandomVectorOffset()) * 20.f;
 
-                particle.radius   = 0.25f;
-                particle.position = position;
-                particle.velocity = velocity;
-                particle.color    = getRandomColor();
-
-                particles.push_back(particle);
+                particleData.radius[particleData.count]   = 0.25f;
+                particleData.position[particleData.count] = position;
+                particleData.velocity[particleData.count] = velocity;
+                particleData.color[particleData.count]    = getRandomColor();
 
                 time = SpawnTime;
             }
         }
 
         if (IsKeyPressed(KEY_C)) {
-            for (auto& p : particles) {
-                p.velocity = getRandomDirection() * 100.f;
+            for (int i = 0; i < particleData.count; i++) {
+                particleData.velocity[i] = getRandomDirection() * 100.f;
             }
         }
 
@@ -156,7 +153,7 @@ int main() {
             EndMode3D();
 
             DrawFPS(10, 10);
-            std::string particleNo = std::to_string(particles.size());
+            std::string particleNo = std::to_string(particleData.count);
             DrawText(particleNo.c_str(), 10, 36, 24, DARKGREEN);
         }
         EndDrawing();

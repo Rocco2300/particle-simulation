@@ -13,14 +13,15 @@ Renderer::Renderer() {
     generateSphereMesh();
 }
 
-Renderer::Renderer(std::vector<Particle>& particles, std::vector<Plane>& planes)
-    : m_planes{&planes}, m_particles{&particles} {
+Renderer::Renderer(ParticleData& particleData, std::vector<Plane>& planes)
+    : m_planes{&planes}
+    , m_particleData{&particleData} {
     generatePlaneMesh();
     generateSphereMesh();
 }
 
 void Renderer::draw() {
-    if (!m_particles) {
+    if (m_particleData->count == 0) {
         return;
     }
 
@@ -28,20 +29,24 @@ void Renderer::draw() {
         drawPlane(plane);
     }
 
-    for (const auto& particle: *m_particles) {
+    for (int particle = 0; particle < m_particleData->count; particle++) {
         drawParticle(particle);
     }
 }
 
-void Renderer::drawParticle(const Particle& particle) {
-    auto scale     = glm::scale({1}, glm::vec3(particle.radius));
-    auto translate = glm::translate({1}, particle.position);
+void Renderer::drawParticle(Particle particle) {
+    auto& color    = m_particleData->color[particle];
+    auto& radius   = m_particleData->radius[particle];
+    auto& position = m_particleData->position[particle];
+
+    auto scale     = glm::scale({1}, glm::vec3(radius));
+    auto translate = glm::translate({1}, position);
 
     auto transform = translate * scale;
     rlPushMatrix();
     {
         rlMultMatrixf(glm::value_ptr(transform));
-        DrawModel(m_sphereModel, {0, 0, 0}, 1, particle.color);
+        DrawModel(m_sphereModel, {0, 0, 0}, 1, color);
     }
     rlPopMatrix();
 }
