@@ -6,18 +6,33 @@
 #include <glm/gtx/quaternion.hpp>
 
 #include <raylib.h>
+#include <raymath.h>
+#include <rcamera.h>
 #include <rlgl.h>
+
+#include <string>
 
 Renderer::Renderer() {
     generatePlaneMesh();
     generateSphereMesh();
 }
 
-Renderer::Renderer(ParticleData& particleData, std::vector<Plane>& planes)
-    : m_planes{&planes}
+Renderer::Renderer(Camera3D& camera, ParticleData& particleData, std::vector<Plane>& planes)
+    : m_camera{&camera}
+    , m_planes{&planes}
     , m_particleData{&particleData} {
+
     generatePlaneMesh();
     generateSphereMesh();
+
+    m_shader = LoadShader(
+            "C:/Users/grigo/repos/particle-simulation/shaders/particle.vert",
+            "C:/Users/grigo/repos/particle-simulation/shaders/particle.frag"
+    );
+
+    m_viewLoc  = GetShaderLocation(m_shader, "view");
+    m_projLoc  = GetShaderLocation(m_shader, "projection");
+    m_countLoc = GetShaderLocation(m_shader, "count");
 }
 
 void Renderer::draw() {
@@ -25,16 +40,67 @@ void Renderer::draw() {
         return;
     }
 
-    for (const auto& plane: *m_planes) {
-        drawPlane(plane);
-    }
+    BeginDrawing();
+    {
+        ClearBackground(RAYWHITE);
 
-    for (int particle = 0; particle < m_particleData->count; particle++) {
-        drawParticle(particle);
+        BeginMode3D(*m_camera);
+        {
+            for (const auto& plane: *m_planes) {
+                drawPlane(plane);
+            }
+
+            drawParticles();
+
+            DrawGrid(100, 1.f);
+        }
+        EndMode3D();
+
+        DrawFPS(10, 10);
+        std::string particleNo = std::to_string(m_particleData->count);
+        DrawText(particleNo.c_str(), 10, 36, 24, DARKGREEN);
     }
+    EndDrawing();
+}
+
+void Renderer::drawParticles() {
+    BeginShaderMode(m_shader);
+    {
+        rlBindShaderBuffer(global.positionSSBO, 0);
+        rlBindShaderBuffer(global.colorSSBO, 1);
+
+        float aspect    = (float) GetScreenWidth() / (float) GetScreenHeight();
+        auto view       = GetCameraViewMatrix(m_camera);
+        auto projection = GetCameraProjectionMatrix(m_camera, aspect);
+
+        SetShaderValueMatrix(m_shader, m_viewLoc, view);
+        SetShaderValueMatrix(m_shader, m_projLoc, projection);
+        SetShaderValue(m_shader, m_countLoc, &m_particleData->count, SHADER_UNIFORM_INT);
+
+        rlUpdateShaderBuffer(
+                global.positionSSBO,
+                &m_particleData->position,
+                sizeof(m_particleData->position),
+                0
+        );
+
+        rlUpdateShaderBuffer(
+                global.colorSSBO,
+                &m_particleData->color,
+                sizeof(m_particleData->color),
+                0
+        );
+
+        auto& mesh = m_sphereModel.meshes[0];
+        rlEnableVertexArray(mesh.vaoId);
+        rlDrawVertexArrayInstanced(0, mesh.vertexCount, m_particleData->count);
+        rlEnableVertexArray(0);
+    }
+    EndShaderMode();
 }
 
 void Renderer::drawParticle(Particle particle) {
+    /*
     auto& color    = m_particleData->color[particle];
     auto& radius   = m_particleData->radius[particle];
     auto& position = m_particleData->position[particle];
@@ -49,6 +115,7 @@ void Renderer::drawParticle(Particle particle) {
         DrawModel(m_sphereModel, {0, 0, 0}, 1, color);
     }
     rlPopMatrix();
+    */
 }
 
 void Renderer::drawPlane(const Plane& plane) {

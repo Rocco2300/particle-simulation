@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.31)
 project(particle_simulation)
 
 set(CMAKE_CXX_STANDARD 20)
+set(GRAPHICS GRAPHICS_API_OPENGL_43)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
     add_compile_options(-O3)
@@ -11,7 +12,7 @@ include(FetchContent)
 FetchContent_Declare(
         raylib
         GIT_REPOSITORY https://github.com/raysan5/raylib.git
-        GIT_TAG 5.5
+        GIT_BRAN
 )
 FetchContent_MakeAvailable(raylib)
 
@@ -24,7 +25,8 @@ FetchContent_MakeAvailable(glm)
 
 add_executable(
         particle_simulation
-        main.cpp
+        sources/main.cpp
+        sources/objects.cpp
         sources/renderer.cpp
         sources/simulation.cpp
 )

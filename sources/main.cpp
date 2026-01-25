@@ -2,13 +2,7 @@
 #include "renderer.hpp"
 #include "simulation.hpp"
 
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/quaternion.hpp>
-
 #include <raylib.h>
-#include <rcamera.h>
 #include <rlgl.h>
 
 #include <random>
@@ -17,11 +11,12 @@
 static constexpr float Offset = 1.0f;
 static constexpr std::array<Color, 7> colors{RED, BLUE, GREEN, YELLOW, MAGENTA, VIOLET, ORANGE};
 
-static Color getRandomColor() {
+static glm::vec4 getRandomColor() {
     static std::mt19937 gen(std::random_device{}());
     static std::uniform_int_distribution<int> dist(0, 6);
 
-    return colors[dist(gen)];
+    auto rayColor = colors[dist(gen)];
+    return {rayColor.r / 255.0f, rayColor.g / 255.0f, rayColor.b / 255.0f, rayColor.a / 255.0f};
 }
 
 static glm::vec3 getRandomVectorOffset() {
@@ -91,12 +86,20 @@ int main() {
                 particleData.velocity[particleData.count] = getRandomDirection() * 20.f;
                 particleData.color[particleData.count]    = getRandomColor();
 
-                particleData.count ++;
+                particleData.count++;
             }
         }
     }
 
-    Renderer renderer(particleData, obstacles);
+    // clang-format off
+    global.radiusSSBO = rlLoadShaderBuffer(sizeof(particleData.radius), nullptr, RL_DYNAMIC_COPY);
+    global.positionSSBO = rlLoadShaderBuffer(sizeof(particleData.position), nullptr, RL_DYNAMIC_COPY);
+    global.velocitySSBO = rlLoadShaderBuffer(sizeof(particleData.velocity), nullptr, RL_DYNAMIC_COPY);
+    global.accelerationSSBO = rlLoadShaderBuffer(sizeof(particleData.acceleration), nullptr, RL_DYNAMIC_COPY);
+    global.colorSSBO = rlLoadShaderBuffer(sizeof(particleData.color), nullptr, RL_DYNAMIC_COPY);
+    // clang-format on
+
+    Renderer renderer(camera, particleData, obstacles);
     Simulation simulation(particleData, obstacles);
 
     bool movingCam{};
@@ -130,6 +133,7 @@ int main() {
                 particleData.color[particleData.count]    = getRandomColor();
 
                 time = SpawnTime;
+                particleData.count++;
             }
         }
 
@@ -140,23 +144,7 @@ int main() {
         }
 
         simulation.update(dt);
-
-        BeginDrawing();
-        {
-            ClearBackground(RAYWHITE);
-
-            BeginMode3D(camera);
-            {
-                renderer.draw();
-                DrawGrid(100, 1.f);
-            }
-            EndMode3D();
-
-            DrawFPS(10, 10);
-            std::string particleNo = std::to_string(particleData.count);
-            DrawText(particleNo.c_str(), 10, 36, 24, DARKGREEN);
-        }
-        EndDrawing();
+        renderer.draw();
     }
 
     CloseWindow();
