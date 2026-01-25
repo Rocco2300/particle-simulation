@@ -13,15 +13,18 @@ struct Global {
 
 extern Global global;
 
-struct Plane {
-    glm::vec2 size;
-    glm::vec3 position;
-    glm::vec3 normal;
-};
+using Plane = int;
+using Particle = unsigned int;
 
-using Particle = int;
-
+constexpr int MaxPlanes = 6;
 constexpr int MaxParticles = 4096;
+
+struct PlaneData {
+    int count{};
+    glm::vec2 size[MaxPlanes];
+    glm::vec3 position[MaxPlanes];
+    glm::vec3 normal[MaxPlanes];
+};
 
 struct ParticleData {
     int count{};

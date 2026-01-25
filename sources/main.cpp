@@ -62,20 +62,28 @@ int main() {
 
     //SetTargetFPS(60);
 
-    Plane bottomPlane{{10, 10}, {0, 0, 0}, {0, 1, 0}};
-    Plane topPlane{{10, 10}, {0, 10, 0}, {0, -1, 0}};
-    Plane leftPlane({10, 10}, {-5, 5, 0}, {1, 0, 0});
-    Plane rightPlane({10, 10}, {5, 5, 0}, {-1, 0, 0});
-    Plane backPlane({10, 10}, {0, 5, -5}, {0, 0, 1});
-    Plane frontPlane({10, 10}, {0, 5, 5}, {0, 0, -1});
+    PlaneData planeData;
+    planeData.count = 6;
+    planeData.size[0] = {10, 10};
+    planeData.size[1] = {10, 10};
+    planeData.size[2] = {10, 10};
+    planeData.size[3] = {10, 10};
+    planeData.size[4] = {10, 10};
+    planeData.size[5] = {10, 10};
 
-    std::vector<Plane> obstacles;
-    obstacles.push_back(bottomPlane);
-    obstacles.push_back(topPlane);
-    obstacles.push_back(leftPlane);
-    obstacles.push_back(rightPlane);
-    obstacles.push_back(backPlane);
-    obstacles.push_back(frontPlane);
+    planeData.normal[0] = {0, 1, 0};
+    planeData.normal[1] = {0, -1, 0};
+    planeData.normal[2] = {1, 0, 0};
+    planeData.normal[3] = {-1, 0, 0};
+    planeData.normal[4] = {0, 0, 1};
+    planeData.normal[5] = {0, 0, -1};
+
+    planeData.position[0] = {0, 0, 0};
+    planeData.position[1] = {0, 10, 0};
+    planeData.position[2] = {-5, 5, 0};
+    planeData.position[3] = {5, 5, 0};
+    planeData.position[4] = {0, 5, -5};
+    planeData.position[5] = {0, 5, 5};
 
     ParticleData particleData;
     for (float y = 1.0f; y <= 9.0f; y += Offset) {
@@ -99,8 +107,8 @@ int main() {
     global.colorSSBO = rlLoadShaderBuffer(sizeof(particleData.color), nullptr, RL_DYNAMIC_COPY);
     // clang-format on
 
-    Renderer renderer(camera, particleData, obstacles);
-    Simulation simulation(particleData, obstacles);
+    Renderer renderer(camera, particleData, planeData);
+    Simulation simulation(particleData, planeData);
 
     bool movingCam{};
     const float SpawnTime = 0.050f;

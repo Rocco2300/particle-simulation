@@ -9,7 +9,7 @@
 class Renderer {
 public:
     Renderer();
-    Renderer(Camera3D& camera, ParticleData& particleData, std::vector<Plane>& planes);
+    Renderer(Camera3D& camera, ParticleData& particleData, PlaneData& planeData);
 
     void draw();
 
@@ -23,13 +23,13 @@ private:
     Model m_sphereModel;
 
     Camera3D* m_camera;
-    std::vector<Plane>* m_planes;
+    PlaneData* m_planeData;
     ParticleData* m_particleData;
 
     void generatePlaneMesh();
     void generateSphereMesh();
 
-    void drawPlane(const Plane& plane);
     void drawParticles();
+    void drawPlane(Plane plane);
     void drawParticle(Particle particle);
 };

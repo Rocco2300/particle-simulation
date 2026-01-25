@@ -1,7 +1,7 @@
 #include "simulation.hpp"
 
-Simulation::Simulation(ParticleData& particleData, std::vector<Plane>& obstacles)
-    : m_obstacles{&obstacles}
+Simulation::Simulation(ParticleData& particleData, PlaneData& planeData)
+    : m_planeData{&planeData}
     , m_particleData{&particleData} {}
 
 void Simulation::update(float deltaTime) {
@@ -42,25 +42,28 @@ void Simulation::moveParticle(Particle particle, float deltaTime) {
     position += velocity * deltaTime;
 }
 
-float Simulation::getSignedDistance(Particle particle, Plane& plane) {
-    auto& position = m_particleData->position[particle];
+float Simulation::getSignedDistance(Particle particle, Plane plane) {
+    auto& position      = m_particleData->position[particle];
+    auto& planeNormal   = m_planeData->normal[plane];
+    auto& planePosition = m_planeData->position[plane];
 
-    return glm::dot(plane.normal, position - plane.position);
+    return glm::dot(planeNormal, position - planePosition);
 }
 
-bool Simulation::isColliding(Particle particle, Plane& plane) {
+bool Simulation::isColliding(Particle particle, Plane plane) {
     auto& radius = m_particleData->radius[particle];
 
     return getSignedDistance(particle, plane) < radius;
 }
 
-void Simulation::solvePenetration(Particle particle, Plane& plane) {
-    auto& radius   = m_particleData->radius[particle];
-    auto& position = m_particleData->position[particle];
+void Simulation::solvePenetration(Particle particle, Plane plane) {
+    auto& radius      = m_particleData->radius[particle];
+    auto& position    = m_particleData->position[particle];
+    auto& planeNormal = m_planeData->normal[plane];
 
     auto distance   = getSignedDistance(particle, plane);
     auto moveAmount = radius - distance + 0.0001f;
-    position += plane.normal * moveAmount;
+    position += planeNormal * moveAmount;
 }
 
 bool Simulation::isColliding(Particle p1, Particle p2) {
@@ -96,10 +99,12 @@ void Simulation::resolveCollisions(Particle particle) {
     auto& pos1 = m_particleData->position[particle];
     auto& vel1 = m_particleData->velocity[particle];
 
-    for (auto& plane: *m_obstacles) {
-        if (isColliding(particle, plane)) {
-            solvePenetration(particle, plane);
-            vel1 = glm::reflect(vel1, plane.normal) * 0.90f;
+    for (int i = 0; i < m_planeData->count; i++) {
+        if (isColliding(particle, i)) {
+            solvePenetration(particle, i);
+
+            auto& normal = m_planeData->normal[i];
+            vel1 = glm::reflect(vel1, normal) * 0.90f;
         }
     }
 

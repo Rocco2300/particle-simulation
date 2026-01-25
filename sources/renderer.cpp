@@ -17,9 +17,9 @@ Renderer::Renderer() {
     generateSphereMesh();
 }
 
-Renderer::Renderer(Camera3D& camera, ParticleData& particleData, std::vector<Plane>& planes)
+Renderer::Renderer(Camera3D& camera, ParticleData& particleData, PlaneData& planeData)
     : m_camera{&camera}
-    , m_planes{&planes}
+    , m_planeData{&planeData}
     , m_particleData{&particleData} {
 
     generatePlaneMesh();
@@ -46,7 +46,7 @@ void Renderer::draw() {
 
         BeginMode3D(*m_camera);
         {
-            for (const auto& plane: *m_planes) {
+            for (int plane = 0; plane < m_planeData->count; plane++) {
                 drawPlane(plane);
             }
 
@@ -61,6 +61,26 @@ void Renderer::draw() {
         DrawText(particleNo.c_str(), 10, 36, 24, DARKGREEN);
     }
     EndDrawing();
+}
+
+
+void Renderer::drawParticle(Particle particle) {
+    /*
+    auto& color    = m_particleData->color[particle];
+    auto& radius   = m_particleData->radius[particle];
+    auto& position = m_particleData->position[particle];
+
+    auto scale     = glm::scale({1}, glm::vec3(radius));
+    auto translate = glm::translate({1}, position);
+
+    auto transform = translate * scale;
+    rlPushMatrix();
+    {
+        rlMultMatrixf(glm::value_ptr(transform));
+        DrawModel(m_sphereModel, {0, 0, 0}, 1, color);
+    }
+    rlPopMatrix();
+    */
 }
 
 void Renderer::drawParticles() {
@@ -99,29 +119,14 @@ void Renderer::drawParticles() {
     EndShaderMode();
 }
 
-void Renderer::drawParticle(Particle particle) {
-    /*
-    auto& color    = m_particleData->color[particle];
-    auto& radius   = m_particleData->radius[particle];
-    auto& position = m_particleData->position[particle];
+void Renderer::drawPlane(Plane plane) {
+    auto& size     = m_planeData->size[plane];
+    auto& normal   = m_planeData->normal[plane];
+    auto& position = m_planeData->position[plane];
 
-    auto scale     = glm::scale({1}, glm::vec3(radius));
     auto translate = glm::translate({1}, position);
-
-    auto transform = translate * scale;
-    rlPushMatrix();
-    {
-        rlMultMatrixf(glm::value_ptr(transform));
-        DrawModel(m_sphereModel, {0, 0, 0}, 1, color);
-    }
-    rlPopMatrix();
-    */
-}
-
-void Renderer::drawPlane(const Plane& plane) {
-    auto translate = glm::translate({1}, plane.position);
-    auto rotation  = glm::mat4_cast(glm::rotation({0, 1, 0}, plane.normal));
-    auto scale     = glm::scale({1}, glm::vec3{plane.size.x, 1, plane.size.y});
+    auto rotation  = glm::mat4_cast(glm::rotation({0, 1, 0}, normal));
+    auto scale     = glm::scale({1}, glm::vec3{size.x, 1, size.y});
     auto transform = translate * rotation * scale;
 
     rlPushMatrix();
