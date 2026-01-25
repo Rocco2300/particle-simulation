@@ -75,7 +75,7 @@ void Simulation::resolveCollisions(Particle& particle) {
     for (auto& plane: *m_obstacles) {
         if (isColliding(particle, plane)) {
             solvePenetration(particle, plane);
-            particle.velocity = glm::reflect(particle.velocity, plane.normal) * 0.8f;
+            particle.velocity = glm::reflect(particle.velocity, plane.normal) * 0.90f;
         }
     }
 
@@ -86,8 +86,8 @@ void Simulation::resolveCollisions(Particle& particle) {
 
             solvePenetration(particle, secondParticle);
 
-            particle.velocity       = glm::reflect(particle.velocity, normal) * 0.9f;
-            secondParticle.velocity = glm::reflect(secondParticle.velocity, normal) * 0.9f;
+            particle.velocity       = glm::reflect(particle.velocity, normal) * 0.95f;
+            secondParticle.velocity = glm::reflect(secondParticle.velocity, normal) * 0.95f;
         }
     }
 }
