@@ -25,7 +25,7 @@ struct Global {
 extern Global global;
 
 using Plane = int;
-using Particle = unsigned int;
+using Particle = int;
 
 constexpr int MaxPlanes = 6;
 constexpr int MaxParticles = 4096;

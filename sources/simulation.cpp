@@ -50,13 +50,13 @@ float Simulation::getSignedDistance(Particle particle, Plane plane) {
     return glm::dot(planeNormal, position - planePosition);
 }
 
-bool Simulation::isColliding(Particle particle, Plane plane) {
+bool Simulation::isCollidingPlane(Particle particle, Plane plane) {
     auto& radius = m_particleData->radius[particle];
 
     return getSignedDistance(particle, plane) < radius;
 }
 
-void Simulation::solvePenetration(Particle particle, Plane plane) {
+void Simulation::solvePlanePenetration(Particle particle, Plane plane) {
     auto& radius      = m_particleData->radius[particle];
     auto& position    = m_particleData->position[particle];
     auto& planeNormal = m_planeData->normal[plane];
@@ -66,7 +66,7 @@ void Simulation::solvePenetration(Particle particle, Plane plane) {
     position += planeNormal * moveAmount;
 }
 
-bool Simulation::isColliding(Particle p1, Particle p2) {
+bool Simulation::isCollidingParticle(Particle p1, Particle p2) {
     auto& rad1 = m_particleData->radius[p1];
     auto& rad2 = m_particleData->radius[p2];
     auto& pos1 = m_particleData->position[p1];
@@ -81,7 +81,7 @@ bool Simulation::isColliding(Particle p1, Particle p2) {
     return false;
 }
 
-void Simulation::solvePenetration(Particle p1, Particle p2) {
+void Simulation::solveParticlePenetration(Particle p1, Particle p2) {
     auto& rad1 = m_particleData->radius[p1];
     auto& rad2 = m_particleData->radius[p2];
     auto& pos1 = m_particleData->position[p1];
@@ -100,8 +100,8 @@ void Simulation::resolveCollisions(Particle particle) {
     auto& vel1 = m_particleData->velocity[particle];
 
     for (int i = 0; i < m_planeData->count; i++) {
-        if (isColliding(particle, i)) {
-            solvePenetration(particle, i);
+        if (isCollidingPlane(particle, i)) {
+            solvePlanePenetration(particle, i);
 
             auto& normal = m_planeData->normal[i];
             vel1 = glm::reflect(vel1, normal) * 0.90f;
@@ -112,11 +112,11 @@ void Simulation::resolveCollisions(Particle particle) {
         auto& pos2 = m_particleData->position[i];
         auto& vel2 = m_particleData->velocity[i];
 
-        if (i != particle && isColliding(i, particle)) {
+        if (i != particle && isCollidingParticle(i, particle)) {
             auto normal   = glm::normalize(pos2 - pos1);
             auto distance = glm::distance(pos1, pos2);
 
-            solvePenetration(i, particle);
+            solveParticlePenetration(i, particle);
 
             vel1 = glm::reflect(vel1, normal) * 0.95f;
             vel2 = glm::reflect(vel2, normal) * 0.95f;
