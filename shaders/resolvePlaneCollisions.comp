@@ -1,0 +1,75 @@
+#version 440
+
+layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+#define MAX_PLANES 6
+#define MAX_PARTICLES 16384
+
+layout(std430, binding = 0) buffer radii {
+    float radius[MAX_PARTICLES];
+};
+
+layout(std430, binding = 1) buffer positions {
+    vec3 position[MAX_PARTICLES];
+};
+
+layout(std430, binding = 2) buffer velocities {
+    vec3 velocity[MAX_PARTICLES];
+};
+
+layout(std430, binding = 3) buffer planeSizes {
+    vec2 planeSize[MAX_PLANES];
+};
+
+layout(std430, binding = 4) buffer planeNormals {
+    vec3 planeNormal[MAX_PLANES];
+};
+
+layout(std430, binding = 5) buffer planePositions {
+    vec3 planePosition[MAX_PLANES];
+};
+
+float getSignedDistance(int particle, int plane) {
+    vec3 pos = position[particle];
+    vec3 planeNorm = planeNormal[plane];
+    vec3 planePos = planePosition[plane];
+
+    return dot(planeNorm, pos - planePos);
+}
+
+bool isCollidingPlane(int particle, int plane) {
+    float radius = radius[particle];
+
+    return getSignedDistance(particle, plane) < radius;
+}
+
+void solvePlanePenetration(int particle, int plane) {
+    float rad = radius[particle];
+    vec3 pos = position[particle];
+    vec3 planeNorm = planeNormal[plane];
+
+    float distance = getSignedDistance(particle, plane);
+    float moveAmount = rad - distance + 0.0001;
+
+    pos += planeNorm * moveAmount;
+
+    position[particle] = pos;
+}
+
+void main() {
+    int particle = int(gl_GlobalInvocationID.x);
+
+    vec3 pos = position[particle];
+    vec3 vel = velocity[particle];
+
+    for (int plane = 0; plane < 6; plane++) {
+        if (isCollidingPlane(particle, plane)) {
+            solvePlanePenetration(particle, plane);
+
+            vec3 normal = planeNormal[plane];
+            vel = reflect(vel, normal) * 0.9;
+
+            velocity[particle] = vel;
+        }
+    }
+}

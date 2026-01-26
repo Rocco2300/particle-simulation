@@ -28,20 +28,20 @@ using Plane = int;
 using Particle = int;
 
 constexpr int MaxPlanes = 6;
-constexpr int MaxParticles = 4096;
+constexpr int MaxParticles = 16384;
 
 struct PlaneData {
     int count{};
     glm::vec2 size[MaxPlanes];
-    glm::vec3 position[MaxPlanes];
-    glm::vec3 normal[MaxPlanes];
+    glm::vec4 position[MaxPlanes];
+    glm::vec4 normal[MaxPlanes];
 };
 
 struct ParticleData {
     int count{};
     float radius[MaxParticles]{};
-    glm::vec3 position[MaxParticles]{};
-    glm::vec3 velocity[MaxParticles]{};
-    glm::vec3 acceleration[MaxParticles]{};
+    glm::vec4 position[MaxParticles]{};
+    glm::vec4 velocity[MaxParticles]{};
+    glm::vec4 acceleration[MaxParticles]{};
     glm::vec4 color[MaxParticles]{};
 };

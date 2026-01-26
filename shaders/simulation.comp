@@ -1,0 +1,197 @@
+#version 440
+
+layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+#define MAX_PLANES 6
+#define MAX_PARTICLES 4096
+
+uniform int planeCount;
+uniform int particleCount;
+uniform float deltaTime;
+
+layout(std430, binding = 0) buffer radii {
+    float radius[MAX_PARTICLES];
+};
+
+layout(std430, binding = 1) buffer positions {
+    float position[MAX_PARTICLES][3];
+};
+
+layout(std430, binding = 2) buffer velocities {
+    float velocity[MAX_PARTICLES][3];
+};
+
+layout(std430, binding = 3) buffer accelerations {
+    float acceleration[MAX_PARTICLES][3];
+};
+
+layout(std430, binding = 4) buffer colors {
+    float color[MAX_PARTICLES][4];
+};
+
+layout(std430, binding = 5) buffer planeSizes {
+    float planeSize[MAX_PLANES][2];
+};
+
+layout(std430, binding = 6) buffer planeNormals {
+    float planeNormal[MAX_PLANES][3];
+};
+
+layout(std430, binding = 7) buffer planePositions {
+    float planePosition[MAX_PLANES][3];
+};
+
+float getRadius(int index) {
+    return radius[index];
+}
+
+vec3 getPosition(int index) {
+    return vec3(position[index][0], position[index][1], position[index][2]);
+}
+
+void setPosition(int index, vec3 pos) {
+    position[index][0] = pos.x;
+    position[index][1] = pos.y;
+    position[index][2] = pos.z;
+}
+
+vec3 getVelocity(int index) {
+    return vec3(velocity[index][0], velocity[index][1], velocity[index][2]);
+}
+
+void setVelocity(int index, vec3 vel) {
+    velocity[index][0] = vel.x;
+    velocity[index][1] = vel.y;
+    velocity[index][2] = vel.z;
+}
+
+vec3 getAcceleration(int index) {
+    return vec3(acceleration[index][0], acceleration[index][1], acceleration[index][2]);
+}
+
+void setAcceleration(int index, vec3 acc) {
+    acceleration[index][0] = acc.x;
+    acceleration[index][1] = acc.y;
+    acceleration[index][2] = acc.z;
+}
+
+vec4 getColor(int index) {
+    return vec4(color[index][0], color[index][1], color[index][2], color[index][3]);
+}
+
+vec2 getPlaneSize(int index) {
+    return vec2(planeSize[index][0], planeSize[index][1]);
+}
+
+vec3 getPlaneNormal(int index) {
+    return vec3(planeNormal[index][0], planeNormal[index][1], planeNormal[index][2]);
+}
+
+vec3 getPlanePosition(int index) {
+    return vec3(planePosition[index][0], planePosition[index][1], planePosition[index][2]);
+}
+
+void moveParticle(int particle) {
+    vec3 pos = getPosition(particle);
+    vec3 vel = getVelocity(particle);
+
+    pos += vel * deltaTime;
+
+    setPosition(particle, pos);
+}
+
+float getSignedDistance(int particle, int plane) {
+    vec3 pos = getPosition(particle);
+    vec3 planeNorm = getPlaneNormal(plane);
+    vec3 planePos = getPlanePosition(plane);
+
+    return dot(planeNorm, pos - planePos);
+}
+
+bool isCollidingPlane(int particle, int plane) {
+    float radius = getRadius(particle);
+
+    return getSignedDistance(particle, plane) < radius;
+}
+
+bool isCollidingParticle(int p1, int p2) {
+    float rad1 = getRadius(p1);
+    float rad2 = getRadius(p2);
+    vec3 pos1 = getPosition(p1);
+    vec3 pos2 = getPosition(p2);
+
+    float distance = length(pos2 - pos1);
+    return distance < rad1 + rad2;
+}
+
+void solvePlanePenetration(int particle, int plane) {
+    float rad = getRadius(particle);
+    vec3 pos = getPosition(particle);
+    vec3 planeNorm = getPlaneNormal(plane);
+
+    float distance = getSignedDistance(particle, plane);
+    float moveAmount = rad - distance + 0.00001;
+
+    pos += planeNorm * moveAmount;
+
+    setPosition(particle, pos);
+}
+
+void solveParticlePenetration(int p1, int p2) {
+    float rad1 = getRadius(p1);
+    float rad2 = getRadius(p2);
+    vec3 pos = getPosition(p1);
+    //vec3 pos2 = getPosition(p2);
+
+    vec3 normal = normalize(pos2 - pos1);
+    float distance = length(pos2 - pos1);
+    float moveAmount = rad1 + rad2 - distance;
+
+    pos += normal * -((moveAmount / 2.0) + 0.00001);
+    //pos2 += normal * ((moveAmount / 2.0) + 0.00001);
+
+    setPosition(p1, pos);
+    //setPosition(p2, pos2);
+}
+
+void resolveCollisions(int particle) {
+    vec3 pos = getPosition(particle);
+    vec3 vel = getVelocity(particle);
+
+    for (int plane = 0; plane < planeCount; plane++) {
+        if (isCollidingPlane(particle, plane)) {
+            solvePlanePenetration(particle, plane);
+
+            vec3 normal = getPlaneNormal(plane);
+            vel = reflect(vel, normal) * 0.9;
+
+            setVelocity(particle, vel);
+        }
+    }
+
+    for (int other = particle + 1; other < particleCount; other++) {
+        vec3 otherPos = getPosition(other);
+        vec3 otherVel = getVelocity(other);
+
+        if (isCollidingParticle(particle, other)) {
+            vec3 normal = normalize(otherPos - pos);
+            float distance = length(otherPos - pos);
+
+            solveParticlePenetration(particle, other);
+
+            vel = reflect(vel, normal) * 0.95;
+            otherVel = reflect(otherVel, normal) * 0.95;
+
+            setVelocity(particle, vel);
+            setVelocity(other, otherVel);
+        }
+    }
+}
+
+void main() {
+    int particle = int(gl_GlobalInvocationID.x);
+
+    applyForces(particle);
+    moveParticle(particle);
+    resolveCollisions(particle);
+}

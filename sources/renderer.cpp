@@ -6,7 +6,6 @@
 #include <glm/gtx/quaternion.hpp>
 
 #include <raylib.h>
-#include <raymath.h>
 #include <rcamera.h>
 #include <rlgl.h>
 
@@ -86,8 +85,9 @@ void Renderer::drawParticle(Particle particle) {
 void Renderer::drawParticles() {
     BeginShaderMode(m_shader);
     {
-        rlBindShaderBuffer(global.particles.positionSSBO, 0);
-        rlBindShaderBuffer(global.particles.colorSSBO, 1);
+        rlBindShaderBuffer(global.particles.radiusSSBO, 0);
+        rlBindShaderBuffer(global.particles.positionSSBO, 1);
+        rlBindShaderBuffer(global.particles.colorSSBO, 2);
 
         float aspect    = (float) GetScreenWidth() / (float) GetScreenHeight();
         auto view       = GetCameraViewMatrix(m_camera);
@@ -97,6 +97,7 @@ void Renderer::drawParticles() {
         SetShaderValueMatrix(m_shader, m_projLoc, projection);
         SetShaderValue(m_shader, m_countLoc, &m_particleData->count, SHADER_UNIFORM_INT);
 
+        /*
         rlUpdateShaderBuffer(
                 global.particles.positionSSBO,
                 &m_particleData->position,
@@ -110,6 +111,7 @@ void Renderer::drawParticles() {
                 sizeof(m_particleData->color),
                 0
         );
+        */
 
         auto& mesh = m_sphereModel.meshes[0];
         rlEnableVertexArray(mesh.vaoId);
@@ -124,8 +126,8 @@ void Renderer::drawPlane(Plane plane) {
     auto& normal   = m_planeData->normal[plane];
     auto& position = m_planeData->position[plane];
 
-    auto translate = glm::translate({1}, position);
-    auto rotation  = glm::mat4_cast(glm::rotation({0, 1, 0}, normal));
+    auto translate = glm::translate({1}, glm::vec3(position));
+    auto rotation  = glm::mat4_cast(glm::rotation({0, 1, 0}, glm::vec3(normal)));
     auto scale     = glm::scale({1}, glm::vec3{size.x, 1, size.y});
     auto transform = translate * rotation * scale;
 

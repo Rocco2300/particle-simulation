@@ -1,0 +1,71 @@
+#version 440
+
+layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+#define MAX_PARTICLES 16384
+
+uniform int particleCount;
+
+layout(std430, binding = 0) buffer radii {
+    float radius[MAX_PARTICLES];
+};
+
+layout(std430, binding = 1) buffer positions {
+    vec3 position[MAX_PARTICLES];
+};
+
+layout(std430, binding = 2) buffer velocities {
+    vec3 velocity[MAX_PARTICLES];
+};
+
+bool isCollidingParticle(int p1, int p2) {
+    float rad1 = radius[p1];
+    float rad2 = radius[p2];
+    vec3 pos1 = position[p1];
+    vec3 pos2 = position[p2];
+
+    float distance = length(pos2 - pos1);
+    return distance < rad1 + rad2;
+}
+
+void solveParticlePenetration(int p1, int p2) {
+    float rad1 = radius[p1];
+    float rad2 = radius[p2];
+    vec3 pos1 = position[p1];
+    vec3 pos2 = position[p2];
+
+    vec3 normal = normalize(pos2 - pos1);
+    float distance = length(pos2 - pos1);
+    float moveAmount = rad1 + rad2 - distance;
+
+    pos1 += normal * -((moveAmount / 2.0) + 0.00001);
+    pos2 += normal * ((moveAmount / 2.0) + 0.00001);
+
+    position[p1] = pos1;
+    position[p2] = pos2;
+}
+
+void main() {
+    int particle = int(gl_GlobalInvocationID.x);
+
+    vec3 pos = position[particle];
+    vec3 vel = velocity[particle];
+
+    for (int other = particle + 1; other < particleCount; other++) {
+        vec3 otherPos = position[other];
+        vec3 otherVel = velocity[other];
+
+        if (isCollidingParticle(particle, other)) {
+            vec3 normal = normalize(otherPos - pos);
+            float distance = length(otherPos - pos);
+
+            solveParticlePenetration(particle, other);
+
+            vel = reflect(vel, normal) * 0.95;
+            otherVel = reflect(otherVel, normal) * 0.95;
+
+            velocity[other] = otherVel;
+            velocity[particle] = vel;
+        }
+    }
+}

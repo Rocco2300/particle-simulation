@@ -12,6 +12,11 @@ public:
     void update(float deltaTime);
 
 private:
+    uint32_t m_applyProgram;
+    uint32_t m_moveProgram;
+    uint32_t m_planeCollisionsProgram;
+    uint32_t m_particleCollisionsProgram;
+
     PlaneData* m_planeData;
     ParticleData* m_particleData;
 
@@ -27,4 +32,9 @@ private:
     void solveParticlePenetration(Particle p1, Particle p2);
 
     void resolveCollisions(Particle particle);
+
+    void gpuApplyForces(float deltaTime);
+    void gpuMoveParticles(float deltaTime);
+    void gpuResolvePlaneCollisions();
+    void gpuResolveParticleCollisions();
 };

@@ -29,10 +29,11 @@ add_executable(
         sources/objects.cpp
         sources/renderer.cpp
         sources/simulation.cpp
+        sources/particle_manager.cpp
 )
 
 set_property(TARGET particle_simulation PROPERTY COMPILE_WARNING_AS_ERROR ON)
 
-target_include_directories(particle_simulation PRIVATE include)
+target_include_directories(particle_simulation PRIVATE include ${CMAKE_BINARY_DIR}/_deps/raylib-src/src/external)
 
 target_link_libraries(particle_simulation PRIVATE raylib glm)
