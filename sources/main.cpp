@@ -110,9 +110,7 @@ int main() {
         }
 
         if (IsKeyPressed(KEY_C)) {
-            for (int i = 0; i < particleData.count; i++) {
-                particleData.velocity[i] = getRandomDirection() * 100.f;
-            }
+            particleManager.impulse();
         }
 
         simulation.update(dt);

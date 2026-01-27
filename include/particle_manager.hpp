@@ -37,11 +37,13 @@ public:
     ParticleManager();
 
     void spawn();
+    void impulse();
 
     ParticleData& particleData();
 
 private:
     ParticleData m_particleData;
 
-    void uploadData();
+    void getData();
+    void uploadData(int offset = 0, bool partialUpdate = false);
 };

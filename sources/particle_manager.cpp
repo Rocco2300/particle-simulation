@@ -2,6 +2,7 @@
 
 #include "objects.hpp"
 
+#include <glad.h>
 #include <rlgl.h>
 
 static constexpr std::array<Color, 7> colors{RED, BLUE, GREEN, YELLOW, MAGENTA, VIOLET, ORANGE};
@@ -15,7 +16,7 @@ static glm::vec4 getRandomColor() {
 }
 
 ParticleManager::ParticleManager() {
-    constexpr float Offset = .5f;
+    constexpr float Offset = 4.f;
     for (float y = 1.0f; y <= 9.0f; y += Offset) {
         for (float x = -4.0f; x <= 4.0f; x += Offset) {
             for (float z = -4.0f; z <= 4.0f; z += Offset) {
@@ -33,7 +34,7 @@ ParticleManager::ParticleManager() {
         }
     }
 
-    uploadData();
+    uploadData(0, false);
 }
 
 void ParticleManager::spawn() {
@@ -45,46 +46,69 @@ void ParticleManager::spawn() {
     m_particleData.velocity[m_particleData.count] = velocity;
     m_particleData.color[m_particleData.count]    = getRandomColor();
 
-    m_particleData.count++;
+    uploadData(m_particleData.count, false);
 
-    uploadData();
+    m_particleData.count++;
+}
+
+void ParticleManager::impulse() {
+    getData();
+
+    for (int i = 0; i < m_particleData.count; i++) {
+        m_particleData.velocity[i] = getRandomDirection() * 100.f;
+    }
+
+    uploadData(0, true);
 }
 
 ParticleData& ParticleManager::particleData() { return m_particleData; }
 
-void ParticleManager::uploadData() {
-    rlUpdateShaderBuffer(
-            global.particles.radiusSSBO,
-            &m_particleData.radius,
-            sizeof(m_particleData.radius),
-            0
+void ParticleManager::getData() {
+    glGetBufferSubData(
+            GL_SHADER_STORAGE_BUFFER,
+            0,
+            sizeof(m_particleData.velocity),
+            &m_particleData.velocity
     );
+}
+
+void ParticleManager::uploadData(int offset, bool partialUpdate) {
+    rlUpdateShaderBuffer(
+            global.particles.velocitySSBO,
+            m_particleData.velocity + offset,
+            sizeof(m_particleData.velocity) - offset * sizeof(glm::vec4),
+            offset * sizeof(glm::vec4)
+    );
+
+    if (partialUpdate) {
+        return;
+    }
 
     rlUpdateShaderBuffer(
             global.particles.positionSSBO,
-            &m_particleData.position,
-            sizeof(m_particleData.position),
-            0
+            m_particleData.position + offset,
+            sizeof(m_particleData.position) - offset * sizeof(glm::vec4),
+            offset * sizeof(glm::vec4)
     );
 
     rlUpdateShaderBuffer(
-            global.particles.velocitySSBO,
-            &m_particleData.velocity,
-            sizeof(m_particleData.velocity),
-            0
+            global.particles.radiusSSBO,
+            m_particleData.radius + offset,
+            sizeof(m_particleData.radius) - offset * sizeof(float),
+            offset * sizeof(float)
     );
 
     rlUpdateShaderBuffer(
             global.particles.accelerationSSBO,
-            &m_particleData.acceleration,
-            sizeof(m_particleData.acceleration),
-            0
+            m_particleData.acceleration + offset,
+            sizeof(m_particleData.acceleration) - offset * sizeof(glm::vec4),
+            offset * sizeof(glm::vec4)
     );
 
     rlUpdateShaderBuffer(
             global.particles.colorSSBO,
-            &m_particleData.color,
-            sizeof(m_particleData.color),
-            0
+            m_particleData.color + offset,
+            sizeof(m_particleData.color) - offset * sizeof(glm::vec4),
+            offset * sizeof(glm::vec4)
     );
 }
