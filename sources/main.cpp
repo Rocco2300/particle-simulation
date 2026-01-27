@@ -6,7 +6,15 @@
 #include <raylib.h>
 #include <rlgl.h>
 
-int main() {
+int main(int argc, char* argv[]) {
+    auto simulationMode = SimulationMode::CPU;
+    if (argc >= 2) {
+        std::string mode = argv[1];
+        if (mode == "--gpu") {
+            simulationMode = SimulationMode::GPU;
+        }
+    }
+
     const int ScreenWidth  = 800;
     const int ScreenHeight = 600;
 
@@ -80,8 +88,8 @@ int main() {
     ParticleManager particleManager;
     auto& particleData = particleManager.particleData();
 
-    Renderer renderer(camera, particleData, planeData);
-    Simulation simulation(particleData, planeData);
+    Renderer renderer(simulationMode, camera, particleData, planeData);
+    Simulation simulation(simulationMode, particleData, planeData);
 
     bool movingCam{};
     const float SpawnTime = 0.050f;

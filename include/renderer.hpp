@@ -9,7 +9,7 @@
 class Renderer {
 public:
     Renderer();
-    Renderer(Camera3D& camera, ParticleData& particleData, PlaneData& planeData);
+    Renderer(SimulationMode simulationMode, Camera3D& camera, ParticleData& particleData, PlaneData& planeData);
 
     void draw();
 
@@ -25,6 +25,7 @@ private:
     Camera3D* m_camera;
     PlaneData* m_planeData;
     ParticleData* m_particleData;
+    SimulationMode m_simulationMode;
 
     void generatePlaneMesh();
     void generateSphereMesh();

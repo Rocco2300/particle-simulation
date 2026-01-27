@@ -16,7 +16,7 @@ static glm::vec4 getRandomColor() {
 }
 
 ParticleManager::ParticleManager() {
-    constexpr float Offset = 4.f;
+    constexpr float Offset = .5f;
     for (float y = 1.0f; y <= 9.0f; y += Offset) {
         for (float x = -4.0f; x <= 4.0f; x += Offset) {
             for (float z = -4.0f; z <= 4.0f; z += Offset) {

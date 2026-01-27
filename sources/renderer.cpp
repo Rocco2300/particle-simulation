@@ -16,10 +16,16 @@ Renderer::Renderer() {
     generateSphereMesh();
 }
 
-Renderer::Renderer(Camera3D& camera, ParticleData& particleData, PlaneData& planeData)
+Renderer::Renderer(
+        SimulationMode simulationMode,
+        Camera3D& camera,
+        ParticleData& particleData,
+        PlaneData& planeData
+)
     : m_camera{&camera}
     , m_planeData{&planeData}
-    , m_particleData{&particleData} {
+    , m_particleData{&particleData}
+    , m_simulationMode{simulationMode} {
 
     generatePlaneMesh();
     generateSphereMesh();
@@ -97,21 +103,21 @@ void Renderer::drawParticles() {
         SetShaderValueMatrix(m_shader, m_projLoc, projection);
         SetShaderValue(m_shader, m_countLoc, &m_particleData->count, SHADER_UNIFORM_INT);
 
-        /*
-        rlUpdateShaderBuffer(
-                global.particles.positionSSBO,
-                &m_particleData->position,
-                sizeof(m_particleData->position),
-                0
-        );
+        if (m_simulationMode == SimulationMode::CPU) {
+            rlUpdateShaderBuffer(
+                    global.particles.positionSSBO,
+                    &m_particleData->position,
+                    sizeof(m_particleData->position),
+                    0
+            );
 
-        rlUpdateShaderBuffer(
-                global.particles.colorSSBO,
-                &m_particleData->color,
-                sizeof(m_particleData->color),
-                0
-        );
-        */
+            rlUpdateShaderBuffer(
+                    global.particles.colorSSBO,
+                    &m_particleData->color,
+                    sizeof(m_particleData->color),
+                    0
+            );
+        }
 
         auto& mesh = m_sphereModel.meshes[0];
         rlEnableVertexArray(mesh.vaoId);

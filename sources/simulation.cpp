@@ -1,12 +1,17 @@
 #include "simulation.hpp"
 
-#include <rlgl.h>
 #include <glad.h>
 #include <iostream>
+#include <rlgl.h>
 
-Simulation::Simulation(ParticleData& particleData, PlaneData& planeData)
+Simulation::Simulation(
+        SimulationMode simulationMode,
+        ParticleData& particleData,
+        PlaneData& planeData
+)
     : m_planeData{&planeData}
-    , m_particleData{&particleData} {
+    , m_particleData{&particleData}
+    , m_simulationMode{simulationMode} {
 
     char* applyCode =
             LoadFileText("C:/Users/grigo/repos/particle-simulation/shaders/applyForces.comp");
@@ -20,70 +25,46 @@ Simulation::Simulation(ParticleData& particleData, PlaneData& planeData)
     m_moveProgram       = rlLoadComputeShaderProgram(moveShader);
     UnloadFileText(moveCode);
 
-    char* planeCollisionCode =
-            LoadFileText("C:/Users/grigo/repos/particle-simulation/shaders/resolvePlaneCollisions.comp");
+    char* planeCollisionCode = LoadFileText(
+            "C:/Users/grigo/repos/particle-simulation/shaders/resolvePlaneCollisions.comp"
+    );
     uint32_t planeCollisionsShader = rlCompileShader(planeCollisionCode, RL_COMPUTE_SHADER);
     m_planeCollisionsProgram       = rlLoadComputeShaderProgram(planeCollisionsShader);
     UnloadFileText(planeCollisionCode);
 
-    char* particleCollisionCode =
-            LoadFileText("C:/Users/grigo/repos/particle-simulation/shaders/resolveParticleCollisions.comp");
+    char* particleCollisionCode = LoadFileText(
+            "C:/Users/grigo/repos/particle-simulation/shaders/resolveParticleCollisions.comp"
+    );
     uint32_t particleCollisionsShader = rlCompileShader(particleCollisionCode, RL_COMPUTE_SHADER);
     m_particleCollisionsProgram       = rlLoadComputeShaderProgram(particleCollisionsShader);
     UnloadFileText(particleCollisionCode);
 }
 
 void Simulation::update(float deltaTime) {
-    /*
-    const int steps   = 10;
-    auto subDeltaTime = deltaTime / steps;
-    for (int i = 1; i <= steps; i++) {
-        for (int particle = 0; particle < m_particleData->count; particle++) {
-            applyForces(particle, subDeltaTime);
-            //clampVelocity(particle);
-            moveParticle(particle, subDeltaTime);
-            resolveCollisions(particle);
+    if (m_simulationMode == SimulationMode::GPU) {
+        const int steps   = 3;
+        auto subDeltaTime = deltaTime / steps;
+        for (int i = 0; i < steps; i++) {
+            gpuApplyForces(subDeltaTime);
+            glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+            gpuMoveParticles(subDeltaTime);
+            glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+            gpuResolvePlaneCollisions();
+            glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+            gpuResolveParticleCollisions();
+            glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
-    }
-     */
-
-    /*
-    const int steps = 1;
-    auto subDeltaTime = deltaTime / steps;
-    for (int i = 0; i < steps; i++) {
-        rlEnableShader(m_simulationProgram);
-
-        rlBindShaderBuffer(global.planes.sizeSSBO, 5);
-        rlBindShaderBuffer(global.planes.normalSSBO, 6);
-        rlBindShaderBuffer(global.planes.positionSSBO, 7);
-
-        rlBindShaderBuffer(global.particles.radiusSSBO, 0);
-        rlBindShaderBuffer(global.particles.positionSSBO, 1);
-        rlBindShaderBuffer(global.particles.velocitySSBO, 2);
-        rlBindShaderBuffer(global.particles.accelerationSSBO, 3);
-        rlBindShaderBuffer(global.particles.colorSSBO, 4);
-
-        rlSetUniform(m_deltaTimeLoc, &subDeltaTime, SHADER_UNIFORM_FLOAT, 1);
-        int count = 6;
-        rlSetUniform(m_planeCountLoc, &count, SHADER_UNIFORM_INT, 1);
-        rlSetUniform(m_particleCountLoc, &m_particleData->count, SHADER_UNIFORM_INT, 1);
-
-        rlComputeShaderDispatch(m_particleData->count, 1, 1);
-        rlDisableShader();
-    }
-    */
-
-    const int steps = 3;
-    auto subDeltaTime = deltaTime / steps;
-    for (int i = 0; i < steps; i++) {
-        gpuApplyForces(subDeltaTime);
-        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-        gpuMoveParticles(subDeltaTime);
-        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-        gpuResolvePlaneCollisions();
-        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-        gpuResolveParticleCollisions();
-        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    } else {
+        const int steps   = 10;
+        auto subDeltaTime = deltaTime / steps;
+        for (int i = 1; i <= steps; i++) {
+            for (int particle = 0; particle < m_particleData->count; particle++) {
+                applyForces(particle, subDeltaTime);
+                //clampVelocity(particle);
+                moveParticle(particle, subDeltaTime);
+                resolveCollisions(particle);
+            }
+        }
     }
 }
 

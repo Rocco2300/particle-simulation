@@ -3,6 +3,11 @@
 #include <raylib.h>
 #include <glm/glm.hpp>
 
+enum class SimulationMode {
+    CPU,
+    GPU
+};
+
 struct PlanesGlobalData {
     uint32_t sizeSSBO;
     uint32_t normalSSBO;

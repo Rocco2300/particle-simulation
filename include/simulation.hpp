@@ -7,7 +7,7 @@
 class Simulation {
 public:
     Simulation() = delete;
-    Simulation(ParticleData& particleData, PlaneData& obstacles);
+    Simulation(SimulationMode simulationMode, ParticleData& particleData, PlaneData& obstacles);
 
     void update(float deltaTime);
 
@@ -19,6 +19,7 @@ private:
 
     PlaneData* m_planeData;
     ParticleData* m_particleData;
+    SimulationMode m_simulationMode;
 
     void applyForces(Particle particle, float deltaTime);
     void clampVelocity(Particle particle);
