@@ -29,7 +29,7 @@ add_executable(
         sources/objects.cpp
         sources/renderer.cpp
         sources/simulation.cpp
-        sources/particle_manager.cpp
+        sources/particle_world.cpp
 )
 
 set_property(TARGET particle_simulation PROPERTY COMPILE_WARNING_AS_ERROR ON)
