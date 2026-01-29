@@ -6,10 +6,18 @@
 
 #include <vector>
 
+ struct RendererContext {
+     SimulationMode simulationMode;
+
+     Camera3D* camera;
+     PlaneData* planeData;
+     ParticleData* particleData;
+ };
+
 class Renderer {
 public:
     Renderer();
-    Renderer(SimulationMode simulationMode, Camera3D& camera, ParticleData& particleData, PlaneData& planeData);
+    Renderer(RendererContext& renderContext);
 
     void draw();
 

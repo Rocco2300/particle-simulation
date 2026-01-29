@@ -4,10 +4,18 @@
 
 #include <vector>
 
+struct SimulationContext {
+    bool gravity;
+    SimulationMode simulationMode;
+
+    PlaneData* planeData;
+    ParticleData* particleData;
+};
+
 class Simulation {
 public:
     Simulation() = delete;
-    Simulation(SimulationMode simulationMode, ParticleData& particleData, PlaneData& obstacles);
+    Simulation(SimulationContext& simulationContext);
 
     void update(float deltaTime);
 
@@ -17,6 +25,7 @@ private:
     uint32_t m_planeCollisionsProgram;
     uint32_t m_particleCollisionsProgram;
 
+    bool m_gravity;
     PlaneData* m_planeData;
     ParticleData* m_particleData;
     SimulationMode m_simulationMode;

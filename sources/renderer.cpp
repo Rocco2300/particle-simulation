@@ -16,16 +16,11 @@ Renderer::Renderer() {
     generateSphereMesh();
 }
 
-Renderer::Renderer(
-        SimulationMode simulationMode,
-        Camera3D& camera,
-        ParticleData& particleData,
-        PlaneData& planeData
-)
-    : m_camera{&camera}
-    , m_planeData{&planeData}
-    , m_particleData{&particleData}
-    , m_simulationMode{simulationMode} {
+Renderer::Renderer(RendererContext& rendererContext)
+    : m_camera{rendererContext.camera}
+    , m_planeData{rendererContext.planeData}
+    , m_particleData{rendererContext.particleData}
+    , m_simulationMode{rendererContext.simulationMode} {
 
     generatePlaneMesh();
     generateSphereMesh();

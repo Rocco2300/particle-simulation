@@ -39,8 +39,25 @@ int main(int argc, char* argv[]) {
 
     auto& planeData = particleWorld.planeData();
     auto& particleData = particleWorld.particleData();
-    Renderer renderer(simulationMode, camera, particleData, planeData);
-    Simulation simulation(simulationMode, particleData, planeData);
+
+    RendererContext rendererContext {
+            .simulationMode = simulationMode,
+
+            .camera = &camera,
+            .planeData = &particleWorld.planeData(),
+            .particleData = &particleWorld.particleData()
+    };
+
+    SimulationContext simulationContext {
+            .gravity = true,
+            .simulationMode = simulationMode,
+
+            .planeData = &particleWorld.planeData(),
+            .particleData = &particleWorld.particleData()
+    };
+
+    Renderer renderer(rendererContext);
+    Simulation simulation(simulationContext);
 
     bool movingCam{};
     const float SpawnTime = 0.050f;

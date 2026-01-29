@@ -4,14 +4,11 @@
 #include <iostream>
 #include <rlgl.h>
 
-Simulation::Simulation(
-        SimulationMode simulationMode,
-        ParticleData& particleData,
-        PlaneData& planeData
-)
-    : m_planeData{&planeData}
-    , m_particleData{&particleData}
-    , m_simulationMode{simulationMode} {
+Simulation::Simulation(SimulationContext& simulationContext)
+    : m_gravity{simulationContext.gravity}
+    , m_planeData{simulationContext.planeData}
+    , m_particleData{simulationContext.particleData}
+    , m_simulationMode{simulationContext.simulationMode} {
 
     char* applyCode =
             LoadFileText("C:/Users/grigo/repos/particle-simulation/shaders/applyForces.comp");
