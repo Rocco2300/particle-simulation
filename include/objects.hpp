@@ -23,6 +23,7 @@ struct ParticlesGlobalData {
 };
 
 struct Global {
+    int temp;
     PlanesGlobalData planes;
     ParticlesGlobalData particles;
 };

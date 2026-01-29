@@ -90,7 +90,7 @@ void ParticleWorld::buildBoxWorld() {
     addPlane({10, 10}, {0, 5, -5}, {0, 0, 1});
     addPlane({10, 10}, {0, 5, 5}, {0, 0, -1});
 
-    constexpr float Offset = 2.5f;
+    constexpr float Offset = 1.f;
     for (float y = 1.0f; y <= 9.0f; y += Offset) {
         for (float x = -4.0f; x <= 4.0f; x += Offset) {
             for (float z = -4.0f; z <= 4.0f; z += Offset) {
@@ -110,7 +110,7 @@ void ParticleWorld::buildBoxWorld() {
 void ParticleWorld::buildSuperflatWorld() {
     addPlane({100, 100}, {0, 0, 0}, {0, 1, 0});
 
-    constexpr float Offset = 2.5f;
+    constexpr float Offset = 3.f;
     for (float y = 1.0f; y <= 9.0f; y += Offset) {
         for (float x = -4.0f; x <= 4.0f; x += Offset) {
             for (float z = -4.0f; z <= 4.0f; z += Offset) {
@@ -118,7 +118,7 @@ void ParticleWorld::buildSuperflatWorld() {
                     break;
                 }
 
-                addParticle(0.125f, {x, y, z}, getRandomDirection() * 20.f, getRandomColor());
+                addParticle(0.125f, {x, y, z}, {0, 0, 0}, getRandomColor());
             }
         }
     }
