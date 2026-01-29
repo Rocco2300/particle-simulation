@@ -44,11 +44,14 @@ ParticleWorld::ParticleWorld() {
     uploadParticleData(0, false);
 }
 
-void ParticleWorld::spawn() {
-    auto dir      = getRandomDirection();
-    auto position = glm::vec3(4, 8, -4);
-    auto velocity = glm::normalize(glm::vec3(-1, -1, 1) + dir) * 20.f;
+void ParticleWorld::spawn(glm::vec3 position, bool randomVelocity) {
+    auto velocity = glm::vec3(0);
     auto color    = getRandomColor();
+
+    if (randomVelocity) {
+        auto dir = getRandomDirection();
+        velocity = glm::normalize(glm::vec3(-1, -1, 1) + dir) * 20.f;
+    }
 
     addParticle(0.125f, position, velocity, color);
 

@@ -26,8 +26,6 @@ int main(int argc, char* argv[]) {
     camera.fovy       = 45.f;
     camera.projection = CAMERA_PERSPECTIVE;
 
-    //SetTargetFPS(60);
-
     ParticleWorld particleWorld;
 
     particleWorld.addPlane({10, 10}, {0, 0, 0}, {0, 1, 0});
@@ -36,9 +34,6 @@ int main(int argc, char* argv[]) {
     particleWorld.addPlane({10, 10}, {5, 5, 0}, {-1, 0, 0});
     particleWorld.addPlane({10, 10}, {0, 5, -5}, {0, 0, 1});
     particleWorld.addPlane({10, 10}, {0, 5, 5}, {0, 0, -1});
-
-    auto& planeData = particleWorld.planeData();
-    auto& particleData = particleWorld.particleData();
 
     RendererContext rendererContext {
             .simulationMode = simulationMode,
@@ -80,7 +75,7 @@ int main(int argc, char* argv[]) {
 
         if (IsKeyPressedRepeat(KEY_X)) {
             if (time <= 0.f) {
-                particleWorld.spawn();
+                particleWorld.spawn({4, 8, -4}, true);
                 time = SpawnTime;
             }
         }
