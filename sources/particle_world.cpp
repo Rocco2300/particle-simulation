@@ -27,21 +27,6 @@ ParticleWorld::ParticleWorld() {
     global.particles.accelerationSSBO = rlLoadShaderBuffer(sizeof(ParticleData::acceleration), nullptr, RL_DYNAMIC_COPY);
     global.particles.colorSSBO = rlLoadShaderBuffer(sizeof(ParticleData::color), nullptr, RL_DYNAMIC_COPY);
     // clang-format on
-
-    constexpr float Offset = 2.5f;
-    for (float y = 1.0f; y <= 9.0f; y += Offset) {
-        for (float x = -4.0f; x <= 4.0f; x += Offset) {
-            for (float z = -4.0f; z <= 4.0f; z += Offset) {
-                if (m_particleData.count == MaxParticles - 1) {
-                    break;
-                }
-
-                addParticle(0.125f, {x, y, z}, getRandomDirection() * 20.f, getRandomColor());
-            }
-        }
-    }
-
-    uploadParticleData(0, false);
 }
 
 void ParticleWorld::spawn(glm::vec3 position, bool randomVelocity) {
@@ -77,8 +62,6 @@ void ParticleWorld::addPlane(glm::vec2 size, glm::vec3 position, glm::vec3 norma
     m_planeData.normal[index]   = glm::vec4(normal, 0);
 
     m_planeData.count++;
-
-    uploadPlaneData(m_planeData.count - 1);
 }
 
 void ParticleWorld::addParticle(
@@ -98,6 +81,51 @@ void ParticleWorld::addParticle(
 PlaneData& ParticleWorld::planeData() { return m_planeData; }
 
 ParticleData& ParticleWorld::particleData() { return m_particleData; }
+
+void ParticleWorld::buildBoxWorld() {
+    addPlane({10, 10}, {0, 0, 0}, {0, 1, 0});
+    addPlane({10, 10}, {0, 10, 0}, {0, -1, 0});
+    addPlane({10, 10}, {-5, 5, 0}, {1, 0, 0});
+    addPlane({10, 10}, {5, 5, 0}, {-1, 0, 0});
+    addPlane({10, 10}, {0, 5, -5}, {0, 0, 1});
+    addPlane({10, 10}, {0, 5, 5}, {0, 0, -1});
+
+    constexpr float Offset = 2.5f;
+    for (float y = 1.0f; y <= 9.0f; y += Offset) {
+        for (float x = -4.0f; x <= 4.0f; x += Offset) {
+            for (float z = -4.0f; z <= 4.0f; z += Offset) {
+                if (m_particleData.count == MaxParticles - 1) {
+                    break;
+                }
+
+                addParticle(0.125f, {x, y, z}, getRandomDirection() * 20.f, getRandomColor());
+            }
+        }
+    }
+
+    uploadPlaneData(0);
+    uploadParticleData(0, false);
+}
+
+void ParticleWorld::buildSuperflatWorld() {
+    addPlane({100, 100}, {0, 0, 0}, {0, 1, 0});
+
+    constexpr float Offset = 2.5f;
+    for (float y = 1.0f; y <= 9.0f; y += Offset) {
+        for (float x = -4.0f; x <= 4.0f; x += Offset) {
+            for (float z = -4.0f; z <= 4.0f; z += Offset) {
+                if (m_particleData.count == MaxParticles - 1) {
+                    break;
+                }
+
+                addParticle(0.125f, {x, y, z}, getRandomDirection() * 20.f, getRandomColor());
+            }
+        }
+    }
+
+    uploadPlaneData(0);
+    uploadParticleData(0, false);
+}
 
 void ParticleWorld::getData() {
     glGetBufferSubData(

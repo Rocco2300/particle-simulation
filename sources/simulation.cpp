@@ -203,12 +203,16 @@ void Simulation::gpuMoveParticles(float deltaTime) {
 void Simulation::gpuResolvePlaneCollisions() {
     rlEnableShader(m_planeCollisionsProgram);
 
+    auto planeCountLoc = rlGetLocationUniform(m_planeCollisionsProgram, "planeCount");
+
     rlBindShaderBuffer(global.particles.radiusSSBO, 0);
     rlBindShaderBuffer(global.particles.positionSSBO, 1);
     rlBindShaderBuffer(global.particles.velocitySSBO, 2);
     rlBindShaderBuffer(global.planes.sizeSSBO, 3);
     rlBindShaderBuffer(global.planes.normalSSBO, 4);
     rlBindShaderBuffer(global.planes.positionSSBO, 5);
+
+    rlSetUniform(planeCountLoc, &m_planeData->count, SHADER_UNIFORM_INT, 1);
 
     rlComputeShaderDispatch(m_particleData->count, 1, 1);
     rlDisableShader();

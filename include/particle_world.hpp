@@ -42,6 +42,9 @@ public:
     void addPlane(glm::vec2 size, glm::vec3 position, glm::vec3 normal);
     void addParticle(float radius, glm::vec3 position, glm::vec3 velocity, glm::vec4 color);
 
+    void buildBoxWorld();
+    void buildSuperflatWorld();
+
     PlaneData& planeData();
     ParticleData& particleData();
 

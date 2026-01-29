@@ -27,13 +27,7 @@ int main(int argc, char* argv[]) {
     camera.projection = CAMERA_PERSPECTIVE;
 
     ParticleWorld particleWorld;
-
-    particleWorld.addPlane({10, 10}, {0, 0, 0}, {0, 1, 0});
-    particleWorld.addPlane({10, 10}, {0, 10, 0}, {0, -1, 0});
-    particleWorld.addPlane({10, 10}, {-5, 5, 0}, {1, 0, 0});
-    particleWorld.addPlane({10, 10}, {5, 5, 0}, {-1, 0, 0});
-    particleWorld.addPlane({10, 10}, {0, 5, -5}, {0, 0, 1});
-    particleWorld.addPlane({10, 10}, {0, 5, 5}, {0, 0, -1});
+    particleWorld.buildSuperflatWorld();
 
     RendererContext rendererContext {
             .simulationMode = simulationMode,
