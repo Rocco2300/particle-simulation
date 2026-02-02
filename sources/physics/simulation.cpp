@@ -6,6 +6,7 @@
 
 Simulation::Simulation(SimulationContext& simulationContext)
     : m_gravity{simulationContext.gravity}
+    , m_planeCollisions{simulationContext.planeCollisions}
     , m_planeData{simulationContext.planeData}
     , m_particleData{simulationContext.particleData}
     , m_simulationMode{simulationContext.simulationMode} {
@@ -42,12 +43,19 @@ void Simulation::update(float deltaTime) {
         const int steps   = 3;
         auto subDeltaTime = deltaTime / steps;
         for (int i = 0; i < steps; i++) {
-            gpuApplyForces(subDeltaTime);
-            glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+            if (m_gravity) {
+                gpuApplyForces(subDeltaTime);
+                glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+            }
+
             gpuMoveParticles(subDeltaTime);
             glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-            gpuResolvePlaneCollisions();
-            glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+            if (m_planeCollisions) {
+                gpuResolvePlaneCollisions();
+                glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+            }
+
             gpuResolveParticleCollisions();
             glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
@@ -56,10 +64,17 @@ void Simulation::update(float deltaTime) {
         auto subDeltaTime = deltaTime / steps;
         for (int i = 1; i <= steps; i++) {
             for (int particle = 0; particle < m_particleData->count; particle++) {
-                applyForces(particle, subDeltaTime);
-                //clampVelocity(particle);
+                if (m_gravity) {
+                    applyForces(particle, subDeltaTime);
+                }
+
                 moveParticle(particle, subDeltaTime);
-                resolveCollisions(particle);
+
+                if (m_planeCollisions) {
+                    resolvePlaneCollisions(particle);
+                }
+
+                resolveParticleCollisions(particle);
             }
         }
     }
@@ -143,8 +158,7 @@ void Simulation::solveParticlePenetration(Particle p1, Particle p2) {
     pos2 += normal * ((moveAmount / 2.0f) + 0.0001f);
 }
 
-void Simulation::resolveCollisions(Particle particle) {
-    auto& pos1 = m_particleData->position[particle];
+void Simulation::resolvePlaneCollisions(Particle particle) {
     auto& vel1 = m_particleData->velocity[particle];
 
     for (int i = 0; i < m_planeData->count; i++) {
@@ -155,6 +169,11 @@ void Simulation::resolveCollisions(Particle particle) {
             vel1         = glm::reflect(vel1, normal) * 0.90f;
         }
     }
+}
+
+void Simulation::resolveParticleCollisions(Particle particle) {
+    auto& pos1 = m_particleData->position[particle];
+    auto& vel1 = m_particleData->velocity[particle];
 
     for (int i = 0; i < m_particleData->count; i++) {
         auto& pos2 = m_particleData->position[i];

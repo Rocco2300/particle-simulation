@@ -6,6 +6,7 @@
 
 struct SimulationContext {
     bool gravity;
+    bool planeCollisions;
     SimulationMode simulationMode;
 
     PlaneData* planeData;
@@ -26,6 +27,8 @@ private:
     uint32_t m_particleCollisionsProgram;
 
     bool m_gravity;
+    bool m_planeCollisions;
+
     PlaneData* m_planeData;
     ParticleData* m_particleData;
     SimulationMode m_simulationMode;
@@ -41,7 +44,8 @@ private:
     bool isCollidingParticle(Particle p1, Particle p2);
     void solveParticlePenetration(Particle p1, Particle p2);
 
-    void resolveCollisions(Particle particle);
+    void resolvePlaneCollisions(Particle particle);
+    void resolveParticleCollisions(Particle particle);
 
     void gpuApplyForces(float deltaTime);
     void gpuMoveParticles(float deltaTime);

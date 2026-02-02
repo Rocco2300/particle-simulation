@@ -27,8 +27,8 @@ int main(int argc, char* argv[]) {
     camera.projection = CAMERA_PERSPECTIVE;
 
     ParticleWorld particleWorld;
-    //particleWorld.buildBoxWorld();
-    particleWorld.buildSuperflatWorld();
+    particleWorld.buildBoxWorld();
+    //particleWorld.buildSuperflatWorld();
 
     RendererContext rendererContext {
             .simulationMode = simulationMode,
@@ -40,6 +40,7 @@ int main(int argc, char* argv[]) {
 
     SimulationContext simulationContext {
             .gravity = true,
+            .planeCollisions = true,
             .simulationMode = simulationMode,
 
             .planeData = &particleWorld.planeData(),
