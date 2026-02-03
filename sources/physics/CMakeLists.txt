@@ -4,6 +4,7 @@ add_library(
         objects.cpp
         particle_world.cpp
         simulation.cpp
+        interface.cpp
 )
 
 target_include_directories(

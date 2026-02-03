@@ -3,6 +3,8 @@
 #include "objects.hpp"
 
 #include <glad.h>
+
+#include <raylib.h>
 #include <rlgl.h>
 
 static constexpr std::array<Color, 7> colors{RED, BLUE, GREEN, YELLOW, MAGENTA, VIOLET, ORANGE};

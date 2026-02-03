@@ -1,7 +1,10 @@
 #include "simulation.hpp"
 
-#include <glad.h>
 #include <iostream>
+
+#include <glad.h>
+
+#include <raylib.h>
 #include <rlgl.h>
 
 Simulation::Simulation(SimulationContext& simulationContext)

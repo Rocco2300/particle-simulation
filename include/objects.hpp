@@ -1,6 +1,5 @@
 #pragma once
 
-#include <raylib.h>
 #include <glm/glm.hpp>
 
 enum class SimulationMode {
@@ -34,7 +33,7 @@ using Plane = int;
 using Particle = int;
 
 constexpr int MaxPlanes = 6;
-constexpr int MaxParticles = 16384;
+constexpr int MaxParticles = 5000;
 
 struct PlaneData {
     int count{};
