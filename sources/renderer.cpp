@@ -36,18 +36,16 @@ Renderer::Renderer(RendererContext& rendererContext)
 }
 
 void Renderer::draw() {
-    if (m_particleData->count == 0) {
-        return;
-    }
-
     BeginDrawing();
     {
         ClearBackground(RAYWHITE);
 
         BeginMode3D(*m_camera);
         {
-            for (int plane = 0; plane < m_planeData->count; plane++) {
-                drawPlane(plane);
+            if (m_planeData) {
+                for (int plane = 0; plane < m_planeData->count; plane++) {
+                    drawPlane(plane);
+                }
             }
 
             drawParticles();

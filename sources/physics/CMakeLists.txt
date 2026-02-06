@@ -5,6 +5,7 @@ add_library(
         particle_world.cpp
         simulation.cpp
         interface.cpp
+        ../renderer.cpp
 )
 
 target_include_directories(

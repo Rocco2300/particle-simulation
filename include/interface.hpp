@@ -1,6 +1,7 @@
 #pragma once
 
 #include "objects.hpp"
+#include "renderer.hpp"
 
 #include <glm/glm.hpp>
 
@@ -10,27 +11,31 @@ class Simulation;
 class ParticleWorld;
 
 extern "C" {
+    typedef void (*empty_callback_t)();
     typedef void (*callback_t)(void* data, int count);
 
     struct Context {
         bool shouldStop{};
 
-        std::mutex mutex;
-
-        std::vector<glm::vec3> positions[2];
-
+        Camera3D* camera{};
+        Renderer* renderer{};
         Simulation* simulation{};
+
         ParticleData particleData;
         SimulationMode simulationMode;
-
-        callback_t callback{};
     };
 
     void init();
 
+    void update(float deltaTime);
+
     void setData(void* positions, void* velocities, int count);
 
-    void setResultReadyCallback(callback_t callback);
+    void getData(void* positions);
 
-    void end();
+    void printPositions();
+
+    void printVelocities();
+
+    void clean();
 }

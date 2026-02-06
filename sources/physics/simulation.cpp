@@ -63,7 +63,7 @@ void Simulation::update(float deltaTime) {
             glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
     } else {
-        const int steps   = 10;
+        const int steps   = 3;
         auto subDeltaTime = deltaTime / steps;
         for (int i = 1; i <= steps; i++) {
             for (int particle = 0; particle < m_particleData->count; particle++) {
