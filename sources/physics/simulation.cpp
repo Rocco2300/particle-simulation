@@ -43,7 +43,7 @@ Simulation::Simulation(SimulationContext& simulationContext)
 
 void Simulation::update(float deltaTime) {
     if (m_simulationMode == SimulationMode::GPU) {
-        const int steps   = 3;
+        const int steps   = 1;
         auto subDeltaTime = deltaTime / steps;
         for (int i = 0; i < steps; i++) {
             if (m_gravity) {
@@ -63,7 +63,7 @@ void Simulation::update(float deltaTime) {
             glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
     } else {
-        const int steps   = 3;
+        const int steps   = 1;
         auto subDeltaTime = deltaTime / steps;
         for (int i = 1; i <= steps; i++) {
             for (int particle = 0; particle < m_particleData->count; particle++) {

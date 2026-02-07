@@ -12,31 +12,29 @@
 
 Context context{};
 
-/*
 void uploadData();
 void downloadData();
 void swapBuffers();
-*/
 
-/*
 void uploadData() {
     rlUpdateShaderBuffer(
             global.particles.positionSSBO,
             context.particleData.position,
-            context.particleData.count * sizeof(glm::vec4),
+            sizeof(context.particleData.position),
             0
     );
 
     rlUpdateShaderBuffer(
             global.particles.velocitySSBO,
             context.particleData.velocity,
-            context.particleData.count * sizeof(glm::vec4),
+            sizeof(context.particleData.velocity),
             0
     );
 }
 
 void downloadData() {
     if (context.simulationMode == SimulationMode::GPU) {
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, global.particles.positionSSBO);
         glGetBufferSubData(
                 GL_SHADER_STORAGE_BUFFER,
                 0,
@@ -44,22 +42,55 @@ void downloadData() {
                 &context.particleData.position
         );
     }
-
-    context.positions[1].resize(context.particleData.count);
-    for (int i = 0; i < context.particleData.count; i++) {
-        context.positions[1][i] = context.particleData.position[i];
-    }
 }
 
-void swapBuffers() { std::swap(context.positions[0], context.positions[1]); }
-*/
-
 void init() {
+    SetConfigFlags(FLAG_WINDOW_HIDDEN);
     InitWindow(300, 200, "window");
 
     std::fill_n(context.particleData.radius, MaxParticles, 1);
 
-    context.simulationMode = SimulationMode::CPU;
+    global.particles.radiusSSBO = rlLoadShaderBuffer(sizeof(ParticleData::radius), nullptr, RL_DYNAMIC_COPY);
+    global.particles.positionSSBO = rlLoadShaderBuffer(sizeof(ParticleData::position), nullptr, RL_DYNAMIC_COPY);
+    global.particles.velocitySSBO = rlLoadShaderBuffer(sizeof(ParticleData::velocity), nullptr, RL_DYNAMIC_COPY);
+    global.particles.accelerationSSBO = rlLoadShaderBuffer(sizeof(ParticleData::acceleration), nullptr, RL_DYNAMIC_COPY);
+
+    rlUpdateShaderBuffer(
+            global.particles.velocitySSBO,
+            context.particleData.velocity,
+            sizeof(context.particleData.velocity),
+            0
+    );
+
+    rlUpdateShaderBuffer(
+            global.particles.positionSSBO,
+            context.particleData.position,
+            sizeof(context.particleData.position),
+            0
+    );
+
+    rlUpdateShaderBuffer(
+            global.particles.radiusSSBO,
+            context.particleData.radius,
+            sizeof(context.particleData.radius),
+            0
+    );
+
+    rlUpdateShaderBuffer(
+            global.particles.accelerationSSBO,
+            context.particleData.acceleration,
+            sizeof(context.particleData.acceleration),
+            0
+    );
+
+    rlUpdateShaderBuffer(
+            global.particles.colorSSBO,
+            context.particleData.color,
+            sizeof(context.particleData.color),
+            0
+    );
+
+    context.simulationMode = SimulationMode::GPU;
     SimulationContext simulationContext{
         .gravity         = false,
         .planeCollisions = false,
@@ -91,14 +122,11 @@ void init() {
 }
 
 void update(float deltaTime) {
+    uploadData();
+
     context.simulation->update(deltaTime);
 
-    //downloadData();
-    //swapBuffers();
-
-    //if (context.callback) {
-    //    context.callback(context.positions[0].data(), context.particleData.count);
-    //}
+    downloadData();
 
     context.renderer->draw();
 }
@@ -120,8 +148,6 @@ void getData(void* positions) {
     for (int i = 0; i < context.particleData.count; i++) {
         auto pos = glm::vec3(context.particleData.position[i]);
         posData[i] = pos;
-        std::cout << pos.x << ' ' << pos.y << ' ' << pos.z << std::endl;
-        std::cout << posData[i].x << ' ' << posData[i].y << ' ' << posData[i].z << std::endl;
     }
 }
 

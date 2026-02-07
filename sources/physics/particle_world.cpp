@@ -130,6 +130,7 @@ void ParticleWorld::buildSuperflatWorld() {
 }
 
 void ParticleWorld::getData() {
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, global.particles.velocitySSBO);
     glGetBufferSubData(
             GL_SHADER_STORAGE_BUFFER,
             0,
