@@ -3,10 +3,6 @@
 #include "objects.hpp"
 #include "renderer.hpp"
 
-#include <glm/glm.hpp>
-
-#include <thread>
-
 class Simulation;
 class ParticleWorld;
 

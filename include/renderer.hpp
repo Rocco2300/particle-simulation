@@ -4,8 +4,6 @@
 
 #include <raylib.h>
 
-#include <vector>
-
  struct RendererContext {
      SimulationMode simulationMode;
 

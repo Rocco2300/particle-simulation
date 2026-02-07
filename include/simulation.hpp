@@ -2,8 +2,6 @@
 
 #include "objects.hpp"
 
-#include <vector>
-
 struct SimulationContext {
     bool gravity;
     bool planeCollisions;

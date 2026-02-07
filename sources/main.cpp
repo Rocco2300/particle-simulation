@@ -28,7 +28,6 @@ int main(int argc, char* argv[]) {
 
     ParticleWorld particleWorld;
     particleWorld.buildBoxWorld();
-    //particleWorld.buildSuperflatWorld();
 
     RendererContext rendererContext {
             .simulationMode = simulationMode,
