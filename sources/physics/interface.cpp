@@ -50,10 +50,14 @@ void init() {
 
     std::fill_n(context.particleData.radius, MaxParticles, 1);
 
-    global.particles.radiusSSBO = rlLoadShaderBuffer(sizeof(ParticleData::radius), nullptr, RL_DYNAMIC_COPY);
-    global.particles.positionSSBO = rlLoadShaderBuffer(sizeof(ParticleData::position), nullptr, RL_DYNAMIC_COPY);
-    global.particles.velocitySSBO = rlLoadShaderBuffer(sizeof(ParticleData::velocity), nullptr, RL_DYNAMIC_COPY);
-    global.particles.accelerationSSBO = rlLoadShaderBuffer(sizeof(ParticleData::acceleration), nullptr, RL_DYNAMIC_COPY);
+    global.particles.radiusSSBO =
+            rlLoadShaderBuffer(sizeof(ParticleData::radius), nullptr, RL_DYNAMIC_COPY);
+    global.particles.positionSSBO =
+            rlLoadShaderBuffer(sizeof(ParticleData::position), nullptr, RL_DYNAMIC_COPY);
+    global.particles.velocitySSBO =
+            rlLoadShaderBuffer(sizeof(ParticleData::velocity), nullptr, RL_DYNAMIC_COPY);
+    global.particles.accelerationSSBO =
+            rlLoadShaderBuffer(sizeof(ParticleData::acceleration), nullptr, RL_DYNAMIC_COPY);
 
     rlUpdateShaderBuffer(
             global.particles.velocitySSBO,
@@ -92,17 +96,17 @@ void init() {
 
     context.simulationMode = SimulationMode::GPU;
     SimulationContext simulationContext{
-        .gravity         = false,
-        .planeCollisions = false,
-        .simulationMode  = context.simulationMode,
+            .gravity         = false,
+            .planeCollisions = false,
+            .simulationMode  = context.simulationMode,
 
-        .planeData    = nullptr,
-        .particleData = &context.particleData,
-};
+            .planeData    = nullptr,
+            .particleData = &context.particleData,
+    };
 
     context.simulation = new Simulation(simulationContext);
 
-    context.camera = new Camera3D();
+    context.camera             = new Camera3D();
     context.camera->position   = Vector3{0, 10, 10};
     context.camera->target     = Vector3{0, 0, 0};
     context.camera->up         = Vector3{0, 1, 0};
@@ -110,12 +114,12 @@ void init() {
     context.camera->projection = CAMERA_PERSPECTIVE;
 
     RendererContext rendererContext{
-        .simulationMode = context.simulationMode,
+            .simulationMode = context.simulationMode,
 
-        .camera = context.camera,
+            .camera = context.camera,
 
-        .planeData = nullptr,
-        .particleData = &context.particleData,
+            .planeData    = nullptr,
+            .particleData = &context.particleData,
     };
 
     context.renderer = new Renderer(rendererContext);
@@ -146,7 +150,7 @@ void setData(void* positions, void* velocities, int count) {
 void getData(void* positions) {
     auto* posData = static_cast<glm::vec3*>(positions);
     for (int i = 0; i < context.particleData.count; i++) {
-        auto pos = glm::vec3(context.particleData.position[i]);
+        auto pos   = glm::vec3(context.particleData.position[i]);
         posData[i] = pos;
     }
 }

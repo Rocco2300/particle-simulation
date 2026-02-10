@@ -3,6 +3,8 @@
 #include "renderer.hpp"
 #include "simulation.hpp"
 
+#include <iostream>
+#include <ostream>
 #include <raylib.h>
 
 int main(int argc, char* argv[]) {

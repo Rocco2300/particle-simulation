@@ -92,7 +92,7 @@ void ParticleWorld::buildBoxWorld() {
     addPlane({10, 10}, {0, 5, -5}, {0, 0, 1});
     addPlane({10, 10}, {0, 5, 5}, {0, 0, -1});
 
-    constexpr float Offset = 1.f;
+    constexpr float Offset = .5f;
     for (float y = 1.0f; y <= 9.0f; y += Offset) {
         for (float x = -4.0f; x <= 4.0f; x += Offset) {
             for (float z = -4.0f; z <= 4.0f; z += Offset) {
