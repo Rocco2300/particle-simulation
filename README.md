@@ -6,6 +6,8 @@ This is a particle simulation built in C++ using Raylib for a university assignm
 
 I structured the data into a SoA layout to reduce cache misses and used instanced rendering to reduce rendering overhead. For the GPU implementation I used compute shaders. Each step runs as a separate pass, this applies for both simulation types. The results are fed into the instance renderer, either straight from the GPU or uploaded from the CPU. 
 
+Additionally, we were assigned another project that required building an MMO server with physics integration. To cut down on the implementation time, I created DLL based API, which I then used in the [MMO Server](https://github.com/Rocco2300/mmo-server)
+
 ## Requirements
 
 - CMake 3.20 or higher
