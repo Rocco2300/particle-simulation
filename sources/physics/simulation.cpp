@@ -194,6 +194,10 @@ void Simulation::resolveParticleCollisions(Particle particle) {
     }
 }
 
+int Simulation::getInvocationCount() const {
+    return std::ceil(static_cast<float>(m_particleData->count) / 32.f);
+}
+
 void Simulation::gpuApplyForces(float deltaTime) {
     rlEnableShader(m_applyProgram);
 
@@ -204,7 +208,7 @@ void Simulation::gpuApplyForces(float deltaTime) {
 
     rlSetUniform(deltaTimeLoc, &deltaTime, SHADER_UNIFORM_FLOAT, 1);
 
-    rlComputeShaderDispatch(m_particleData->count, 1, 1);
+    rlComputeShaderDispatch(getInvocationCount(), 1, 1);
     rlDisableShader();
 }
 
@@ -218,7 +222,7 @@ void Simulation::gpuMoveParticles(float deltaTime) {
 
     rlSetUniform(deltaTimeLoc, &deltaTime, SHADER_UNIFORM_FLOAT, 1);
 
-    rlComputeShaderDispatch(m_particleData->count, 1, 1);
+    rlComputeShaderDispatch(getInvocationCount(), 1, 1);
     rlDisableShader();
 }
 
@@ -236,7 +240,7 @@ void Simulation::gpuResolvePlaneCollisions() {
 
     rlSetUniform(planeCountLoc, &m_planeData->count, SHADER_UNIFORM_INT, 1);
 
-    rlComputeShaderDispatch(m_particleData->count, 1, 1);
+    rlComputeShaderDispatch(getInvocationCount(), 1, 1);
     rlDisableShader();
 }
 
@@ -251,6 +255,6 @@ void Simulation::gpuResolveParticleCollisions() {
 
     rlSetUniform(particleCountLoc, &m_particleData->count, SHADER_UNIFORM_INT, 1);
 
-    rlComputeShaderDispatch(m_particleData->count, 1, 1);
+    rlComputeShaderDispatch(getInvocationCount(), 1, 1);
     rlDisableShader();
 }

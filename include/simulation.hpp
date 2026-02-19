@@ -45,6 +45,8 @@ private:
     void resolvePlaneCollisions(Particle particle);
     void resolveParticleCollisions(Particle particle);
 
+    int getInvocationCount() const;
+
     void gpuApplyForces(float deltaTime);
     void gpuMoveParticles(float deltaTime);
     void gpuResolvePlaneCollisions();
