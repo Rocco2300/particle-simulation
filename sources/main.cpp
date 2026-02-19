@@ -16,6 +16,11 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    int particleNo = MaxParticles;
+    if (argc >= 3) {
+        particleNo = std::atoi(argv[2]);
+    }
+
     const int ScreenWidth  = 800;
     const int ScreenHeight = 600;
 
@@ -29,7 +34,7 @@ int main(int argc, char* argv[]) {
     camera.projection = CAMERA_PERSPECTIVE;
 
     ParticleWorld particleWorld;
-    particleWorld.buildBoxWorld();
+    particleWorld.buildBoxWorld(particleNo);
 
     RendererContext rendererContext {
             .simulationMode = simulationMode,

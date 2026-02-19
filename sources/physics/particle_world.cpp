@@ -84,7 +84,7 @@ PlaneData& ParticleWorld::planeData() { return m_planeData; }
 
 ParticleData& ParticleWorld::particleData() { return m_particleData; }
 
-void ParticleWorld::buildBoxWorld() {
+void ParticleWorld::buildBoxWorld(int particleNo) {
     addPlane({10, 10}, {0, 0, 0}, {0, 1, 0});
     addPlane({10, 10}, {0, 10, 0}, {0, -1, 0});
     addPlane({10, 10}, {-5, 5, 0}, {1, 0, 0});
@@ -96,7 +96,7 @@ void ParticleWorld::buildBoxWorld() {
     for (float y = 1.0f; y <= 9.0f; y += Offset) {
         for (float x = -4.0f; x <= 4.0f; x += Offset) {
             for (float z = -4.0f; z <= 4.0f; z += Offset) {
-                if (m_particleData.count == MaxParticles - 1) {
+                if (m_particleData.count == particleNo) {
                     break;
                 }
 
@@ -109,14 +109,14 @@ void ParticleWorld::buildBoxWorld() {
     uploadParticleData(0, false);
 }
 
-void ParticleWorld::buildSuperflatWorld() {
+void ParticleWorld::buildSuperflatWorld(int particleNo) {
     addPlane({100, 100}, {0, 0, 0}, {0, 1, 0});
 
     constexpr float Offset = 3.f;
     for (float y = 1.0f; y <= 9.0f; y += Offset) {
         for (float x = -4.0f; x <= 4.0f; x += Offset) {
             for (float z = -4.0f; z <= 4.0f; z += Offset) {
-                if (m_particleData.count == MaxParticles - 1) {
+                if (m_particleData.count == particleNo) {
                     break;
                 }
 
