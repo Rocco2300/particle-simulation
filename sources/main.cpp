@@ -4,7 +4,6 @@
 #include "simulation.hpp"
 
 #include <iostream>
-#include <ostream>
 #include <raylib.h>
 
 int main(int argc, char* argv[]) {
@@ -18,7 +17,7 @@ int main(int argc, char* argv[]) {
 
     int particleNo = MaxParticles;
     if (argc >= 3) {
-        particleNo = std::max(std::atoi(argv[2]), MaxParticles);
+        particleNo = std::min(std::atoi(argv[2]), MaxParticles);
     }
 
     const int ScreenWidth  = 800;
