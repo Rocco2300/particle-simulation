@@ -39,6 +39,11 @@ Simulation::Simulation(SimulationContext& simulationContext)
     uint32_t particleCollisionsShader = rlCompileShader(particleCollisionCode, RL_COMPUTE_SHADER);
     m_particleCollisionsProgram       = rlLoadComputeShaderProgram(particleCollisionsShader);
     UnloadFileText(particleCollisionCode);
+
+    m_grid.resize(12 * 12 * 12);
+    for (int i = 0; i < 12 * 12 * 12; i++) {
+        m_grid[i].reserve(10);
+    }
 }
 
 void Simulation::update(float deltaTime) {
@@ -63,7 +68,7 @@ void Simulation::update(float deltaTime) {
             glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
     } else {
-        const int steps   = 1;
+        const int steps   = 3;
         auto subDeltaTime = deltaTime / steps;
         for (int i = 1; i <= steps; i++) {
             for (int particle = 0; particle < m_particleData->count; particle++) {
@@ -71,16 +76,71 @@ void Simulation::update(float deltaTime) {
                     applyForces(particle, subDeltaTime);
                 }
 
+                clearGrid();
                 moveParticle(particle, subDeltaTime);
 
                 if (m_planeCollisions) {
                     resolvePlaneCollisions(particle);
+                    populateGrid();
                 }
 
                 resolveParticleCollisions(particle);
             }
         }
     }
+}
+
+void Simulation::clearGrid() {
+    for (int i = 0; i < 12 * 12 * 12; i++) {
+        m_grid[i].clear();
+    }
+}
+
+void Simulation::populateGrid() {
+    for (int particle = 0; particle < m_particleData->count; particle++) {
+        auto position = m_particleData->position[particle];
+        auto particleTriIndex = getParticleTriIndex(particle);
+        auto index = getParticleIndex(particle);
+        if (index < 0 || index >= 12 * 12 * 12) {
+            std::cout << "Fucked up!" << '\n';
+            continue;
+        }
+
+        m_grid[index].push_back(particle);
+    }
+}
+
+int Simulation::getIndex(glm::ivec3 triIndex) {
+    return triIndex.z * (12 * 12) + triIndex.y * 12 + triIndex.x;
+}
+
+int Simulation::isInBounds(glm::ivec3 triIndex) {
+    auto isInXBounds = triIndex.x >= 0 && triIndex.x < 12;
+    auto isInYBounds = triIndex.y >= 0 && triIndex.y < 12;
+    auto isInZBounds = triIndex.z >= 0 && triIndex.z < 12;
+
+    return isInXBounds && isInYBounds && isInZBounds;
+}
+
+glm::ivec3 Simulation::getParticleTriIndex(Particle particle) {
+    auto& position = m_particleData->position[particle];
+
+    auto temp = position;
+    temp.x += 6.f;
+    temp.y += 1.f;
+    temp.z += 6.f;
+
+    glm::ivec3 res{};
+    res.x = std::floor(temp.x);
+    res.y = std::floor(temp.y);
+    res.z = std::floor(temp.z);
+
+    return res;
+}
+
+int Simulation::getParticleIndex(Particle particle) {
+    auto triIndex = getParticleTriIndex(particle);
+    return getIndex(triIndex);
 }
 
 void Simulation::applyForces(Particle particle, float deltaTime) {
@@ -178,6 +238,7 @@ void Simulation::resolveParticleCollisions(Particle particle) {
     auto& pos1 = m_particleData->position[particle];
     auto& vel1 = m_particleData->velocity[particle];
 
+    /*
     for (int i = 0; i < m_particleData->count; i++) {
         auto& pos2 = m_particleData->position[i];
         auto& vel2 = m_particleData->velocity[i];
@@ -190,6 +251,38 @@ void Simulation::resolveParticleCollisions(Particle particle) {
 
             vel1 = glm::reflect(vel1, normal) * 0.95f;
             vel2 = glm::reflect(vel2, normal) * 0.95f;
+        }
+    }
+    */
+
+    auto triIndex = getParticleTriIndex(particle);
+    for (int z = -1; z <= 1; z++) {
+        for (int y = -1; y <= 1; y++) {
+            for (int x = -1; x <= 1; x++) {
+                auto offset      = glm::ivec3(x, y, z);
+                auto newTriIndex = triIndex + offset;
+                if (!isInBounds(newTriIndex)) {
+                    continue;
+                }
+
+                auto index = getIndex(newTriIndex);
+                for (int secondParticle: m_grid[index]) {
+                    auto& pos2 = m_particleData->position[secondParticle];
+                    auto& vel2 = m_particleData->velocity[secondParticle];
+
+                    if (secondParticle != particle &&
+                        isCollidingParticle(secondParticle, particle)) {
+
+                        auto normal   = glm::normalize(pos2 - pos1);
+                        auto distance = glm::distance(pos1, pos2);
+
+                        solveParticlePenetration(secondParticle, particle);
+
+                        vel1 = glm::reflect(vel1, normal) * 0.95f;
+                        vel2 = glm::reflect(vel2, normal) * 0.95f;
+                    }
+                }
+            }
         }
     }
 }

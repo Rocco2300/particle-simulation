@@ -24,12 +24,23 @@ private:
     uint32_t m_planeCollisionsProgram;
     uint32_t m_particleCollisionsProgram;
 
+    using Cell = std::vector<int>;// list of id's that are contained in cell
+    std::vector<Cell> m_grid;
+
     bool m_gravity;
     bool m_planeCollisions;
 
     PlaneData* m_planeData;
     ParticleData* m_particleData;
     SimulationMode m_simulationMode;
+
+    void clearGrid();
+    void populateGrid();
+
+    int getIndex(glm::ivec3 triIndex);
+    int isInBounds(glm::ivec3 triIndex);
+    glm::ivec3 getParticleTriIndex(Particle particle);
+    int getParticleIndex(Particle particle);
 
     void applyForces(Particle particle, float deltaTime);
     void clampVelocity(Particle particle);
