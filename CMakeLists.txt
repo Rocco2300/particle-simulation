@@ -33,10 +33,6 @@ add_executable(
         sources/renderer.cpp
 )
 
-add_executable(own_test sources/own_test.cpp)
-add_executable(vector_test sources/vector_test.cpp)
-add_executable(baseline sources/baseline.cpp)
-
 set_property(TARGET particle_simulation PROPERTY COMPILE_WARNING_AS_ERROR ON)
 
 target_include_directories(particle_simulation PRIVATE include ${CMAKE_BINARY_DIR}/_deps/raylib-src/src/external)
