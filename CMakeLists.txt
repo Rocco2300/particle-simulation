@@ -6,7 +6,7 @@ set(GRAPHICS GRAPHICS_API_OPENGL_43)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
-    add_compile_options(-O3)
+    add_compile_options(-O3 -g)
 endif()
 
 include(FetchContent)
@@ -32,6 +32,10 @@ add_executable(
         sources/main.cpp
         sources/renderer.cpp
 )
+
+add_executable(own_test sources/own_test.cpp)
+add_executable(vector_test sources/vector_test.cpp)
+add_executable(baseline sources/baseline.cpp)
 
 set_property(TARGET particle_simulation PROPERTY COMPILE_WARNING_AS_ERROR ON)
 

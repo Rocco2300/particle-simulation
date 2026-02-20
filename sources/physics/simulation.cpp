@@ -42,7 +42,7 @@ Simulation::Simulation(SimulationContext& simulationContext)
 
     m_grid.resize(12 * 12 * 12);
     for (int i = 0; i < 12 * 12 * 12; i++) {
-        m_grid[i].reserve(10);
+        m_grid[i].reserve(100);
     }
 }
 
@@ -75,18 +75,23 @@ void Simulation::update(float deltaTime) {
                 if (m_gravity) {
                     applyForces(particle, subDeltaTime);
                 }
+            }
 
-                clearGrid();
+            clearGrid();
 
+            for (int particle = 0; particle < m_particleData->count; particle++) {
                 clampVelocity(particle);
 
                 moveParticle(particle, subDeltaTime);
 
                 if (m_planeCollisions) {
                     resolvePlaneCollisions(particle);
-                    populateGrid();
                 }
+            }
 
+            populateGrid();
+
+            for (int particle = 0; particle < m_particleData->count; particle++) {
                 resolveParticleCollisions(particle);
             }
         }
