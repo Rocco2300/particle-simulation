@@ -63,13 +63,15 @@ void Simulation::update(float deltaTime) {
             glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
     } else {
-        const int steps   = 1;
+        const int steps   = 3;
         auto subDeltaTime = deltaTime / steps;
         for (int i = 1; i <= steps; i++) {
             for (int particle = 0; particle < m_particleData->count; particle++) {
                 if (m_gravity) {
                     applyForces(particle, subDeltaTime);
                 }
+
+                clampVelocity(particle);
 
                 moveParticle(particle, subDeltaTime);
 
@@ -96,9 +98,8 @@ void Simulation::applyForces(Particle particle, float deltaTime) {
 void Simulation::clampVelocity(Particle particle) {
     auto& velocity = m_particleData->velocity[particle];
 
-    if (velocity.length() >= 25.f) {
-        velocity = glm::normalize(velocity) * 16.f;
-    }
+    auto length = std::min(glm::length(velocity), 25.f);
+    velocity = glm::normalize(velocity) * length;
 }
 
 void Simulation::moveParticle(Particle particle, float deltaTime) {
