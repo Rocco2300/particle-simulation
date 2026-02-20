@@ -77,6 +77,9 @@ void Simulation::update(float deltaTime) {
                 }
 
                 clearGrid();
+
+                clampVelocity(particle);
+
                 moveParticle(particle, subDeltaTime);
 
                 if (m_planeCollisions) {
@@ -156,9 +159,8 @@ void Simulation::applyForces(Particle particle, float deltaTime) {
 void Simulation::clampVelocity(Particle particle) {
     auto& velocity = m_particleData->velocity[particle];
 
-    if (velocity.length() >= 25.f) {
-        velocity = glm::normalize(velocity) * 16.f;
-    }
+    auto length = std::min(glm::length(velocity), 25.f);
+    velocity = glm::normalize(velocity) * length;
 }
 
 void Simulation::moveParticle(Particle particle, float deltaTime) {
