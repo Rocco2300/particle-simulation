@@ -1,5 +1,6 @@
 #include "simulation.hpp"
 
+#include <exception>
 #include <iostream>
 
 #include <glad.h>
@@ -48,7 +49,7 @@ Simulation::Simulation(SimulationContext& simulationContext)
 
 void Simulation::update(float deltaTime) {
     if (m_simulationMode == SimulationMode::GPU) {
-        const int steps   = 1;
+        const int steps   = 3;
         auto subDeltaTime = deltaTime / steps;
         for (int i = 0; i < steps; i++) {
             if (m_gravity) {
@@ -106,11 +107,16 @@ void Simulation::clearGrid() {
 
 void Simulation::populateGrid() {
     for (int particle = 0; particle < m_particleData->count; particle++) {
-        auto position = m_particleData->position[particle];
+        auto position         = m_particleData->position[particle];
+        auto velocity         = m_particleData->velocity[particle];
         auto particleTriIndex = getParticleTriIndex(particle);
-        auto index = getParticleIndex(particle);
+        auto index            = getParticleIndex(particle);
         if (index < 0 || index >= 12 * 12 * 12) {
             std::cout << "Fucked up!" << '\n';
+            std::cout << position.x << ' ' << position.y << ' ' << position.z << '\n';
+            std::cout << velocity.x << ' ' << velocity.y << ' ' << velocity.z << '\n';
+            std::cout << particleTriIndex.x << ' ' << particleTriIndex.y << ' '
+                      << particleTriIndex.z << '\n';
             continue;
         }
 
@@ -165,7 +171,7 @@ void Simulation::clampVelocity(Particle particle) {
     auto& velocity = m_particleData->velocity[particle];
 
     auto length = std::min(glm::length(velocity), 25.f);
-    velocity = glm::normalize(velocity) * length;
+    velocity    = glm::normalize(velocity) * length;
 }
 
 void Simulation::moveParticle(Particle particle, float deltaTime) {
@@ -219,6 +225,13 @@ void Simulation::solveParticlePenetration(Particle p1, Particle p2) {
     auto& rad2 = m_particleData->radius[p2];
     auto& pos1 = m_particleData->position[p1];
     auto& pos2 = m_particleData->position[p2];
+
+    // bug fix, it apparently can happen, somehow...
+    if (pos1 == pos2) {
+        std::cout << "they were equal, we fixed it\n";
+        auto vel = m_particleData->velocity[p1];
+        pos1 += vel * 0.001f;
+    }
 
     auto normal     = glm::normalize(pos2 - pos1);
     auto distance   = glm::distance(pos1, pos2);
@@ -280,10 +293,9 @@ void Simulation::resolveParticleCollisions(Particle particle) {
                     if (secondParticle != particle &&
                         isCollidingParticle(secondParticle, particle)) {
 
-                        auto normal   = glm::normalize(pos2 - pos1);
-                        auto distance = glm::distance(pos1, pos2);
-
                         solveParticlePenetration(secondParticle, particle);
+
+                        auto normal = glm::normalize(pos2 - pos1);
 
                         vel1 = glm::reflect(vel1, normal) * 0.95f;
                         vel2 = glm::reflect(vel2, normal) * 0.95f;
