@@ -15,21 +15,15 @@ static glm::vec3 getRandomDirection() {
     constexpr std::array<glm::vec3, 8> directions{
             {{1, 1, 1},
              {1, 1, -1},
-             {1, -1, 1},
-             {1, -1, -1},
              {-1, 1, 1},
-             {-1, 1, -1},
-             {-1, -1, 1},
-             {-1, -1, -1}}
+             {-1, 1, -1}}
     };
 
-    static std::mt19937 gen(std::random_device{}());
-    static std::uniform_int_distribution<int> dist(0, 7);
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    static std::uniform_int_distribution dist(0, 3);
 
-    auto direction = directions[dist(gen)];
-    direction += getRandomVectorOffset();
-
-    return glm::normalize(direction);
+    return glm::normalize(directions[dist(gen)]);
 }
 
 class ParticleWorld {
