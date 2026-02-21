@@ -3,7 +3,7 @@
 layout (local_size_x = 32, local_size_y = 1, local_size_z = 1) in;
 
 #define MAX_PLANES 6
-#define MAX_PARTICLES 16384
+#define MAX_PARTICLES 5000
 
 uniform int planeCount;
 

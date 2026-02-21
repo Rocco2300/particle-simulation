@@ -1,6 +1,6 @@
 #version 440
 
-#define MAX_PARTICLES 16384
+#define MAX_PARTICLES 5000
 
 in vec3 vertexNormal;
 in vec3 vertexPosition;
