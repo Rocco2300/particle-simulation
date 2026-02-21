@@ -3,6 +3,7 @@
 #include "objects.hpp"
 
 struct SimulationContext {
+    int steps;
     bool gravity;
     bool planeCollisions;
     SimulationMode simulationMode;
@@ -14,52 +15,24 @@ struct SimulationContext {
 class Simulation {
 public:
     Simulation() = delete;
-    Simulation(SimulationContext& simulationContext);
+    Simulation(SimulationContext& simulationContext)
+        : m_steps{simulationContext.steps}
+        , m_gravity{simulationContext.gravity}
+        , m_planeCollisions{simulationContext.planeCollisions}
+        , m_planeData{simulationContext.planeData}
+        , m_particleData{simulationContext.particleData}
+        , m_simulationMode{simulationContext.simulationMode} {}
 
-    void update(float deltaTime);
+    virtual ~Simulation() = default;
 
-private:
-    uint32_t m_applyProgram;
-    uint32_t m_moveProgram;
-    uint32_t m_planeCollisionsProgram;
-    uint32_t m_particleCollisionsProgram;
+    virtual void update(float deltaTime) = 0;
 
-    using Cell = std::vector<int>;// list of id's that are contained in cell
-    std::vector<Cell> m_grid;
-
+protected:
+    int m_steps;
     bool m_gravity;
     bool m_planeCollisions;
 
     PlaneData* m_planeData;
     ParticleData* m_particleData;
     SimulationMode m_simulationMode;
-
-    void clearGrid();
-    void populateGrid();
-
-    int getIndex(glm::ivec3 triIndex);
-    int isInBounds(glm::ivec3 triIndex);
-    glm::ivec3 getParticleTriIndex(Particle particle);
-    int getParticleIndex(Particle particle);
-
-    void applyForces(Particle particle, float deltaTime);
-    void clampVelocity(Particle particle);
-    void moveParticle(Particle particle, float deltaTime);
-
-    float getSignedDistance(Particle particle, Plane plane);
-    bool isCollidingPlane(Particle particle, Plane plane);
-    void solvePlanePenetration(Particle particle, Plane plane);
-
-    bool isCollidingParticle(Particle p1, Particle p2);
-    void solveParticlePenetration(Particle p1, Particle p2);
-
-    void resolvePlaneCollisions(Particle particle);
-    void resolveParticleCollisions(Particle particle);
-
-    int getInvocationCount() const;
-
-    void gpuApplyForces(float deltaTime);
-    void gpuMoveParticles(float deltaTime);
-    void gpuResolvePlaneCollisions();
-    void gpuResolveParticleCollisions();
 };

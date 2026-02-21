@@ -1,7 +1,7 @@
 #include "interface.hpp"
 
 #include "renderer.hpp"
-#include "simulation.hpp"
+#include "gpu_simulation.hpp"
 
 #include <glad.h>
 
@@ -104,7 +104,7 @@ void init() {
             .particleData = &context.particleData,
     };
 
-    context.simulation = new Simulation(simulationContext);
+    context.simulation = new GPUSimulation(simulationContext);
 
     context.camera             = new Camera3D();
     context.camera->position   = Vector3{0, 10, 10};

@@ -1,3 +1,5 @@
+#include "gpu_simulation.hpp"
+#include "cpu_simulation.hpp"
 #include "objects.hpp"
 #include "particle_world.hpp"
 #include "renderer.hpp"
@@ -44,6 +46,7 @@ int main(int argc, char* argv[]) {
     };
 
     SimulationContext simulationContext {
+            .steps = 3,
             .gravity = true,
             .planeCollisions = true,
             .simulationMode = simulationMode,
@@ -52,8 +55,14 @@ int main(int argc, char* argv[]) {
             .particleData = &particleWorld.particleData()
     };
 
+    Simulation* simulation{};
+    if (simulationMode == SimulationMode::GPU) {
+        simulation = new GPUSimulation(simulationContext);
+    } else {
+        simulation = new CPUSimulation(simulationContext);
+    }
+
     Renderer renderer(rendererContext);
-    Simulation simulation(simulationContext);
 
     bool movingCam{};
     const float SpawnTime = 0.050f;
@@ -85,10 +94,11 @@ int main(int argc, char* argv[]) {
             particleWorld.impulse();
         }
 
-        simulation.update(dt);
+        simulation->update(dt);
         renderer.draw();
     }
 
+    delete simulation;
     CloseWindow();
 
     return 0;

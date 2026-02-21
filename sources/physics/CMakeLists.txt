@@ -3,7 +3,8 @@ add_library(
         SHARED
         objects.cpp
         particle_world.cpp
-        simulation.cpp
+        gpu_simulation.cpp
+        cpu_simulation.cpp
         interface.cpp
         ../renderer.cpp
 )
