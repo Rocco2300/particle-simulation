@@ -5,12 +5,19 @@
 #include <raylib.h>
 #include <rlgl.h>
 
-GPUSimulation::GPUSimulation(SimulationContext& simulationContext) : Simulation(simulationContext) {
+GPUSimulation::GPUSimulation(SimulationContext& simulationContext)
+    : Simulation(simulationContext) {
     char* applyCode =
             LoadFileText("C:/Users/grigo/repos/particle-simulation/shaders/applyForces.comp");
     uint32_t applyShader = rlCompileShader(applyCode, RL_COMPUTE_SHADER);
     m_applyProgram       = rlLoadComputeShaderProgram(applyShader);
     UnloadFileText(applyCode);
+
+    char* clampCode =
+            LoadFileText("C:/Users/grigo/repos/particle-simulation/shaders/clampVelocity.comp");
+    uint32_t clampShader = rlCompileShader(clampCode, RL_COMPUTE_SHADER);
+    m_clampProgram       = rlLoadComputeShaderProgram(clampShader);
+    UnloadFileText(clampCode);
 
     char* moveCode =
             LoadFileText("C:/Users/grigo/repos/particle-simulation/shaders/moveParticles.comp");
@@ -41,6 +48,9 @@ void GPUSimulation::update(float deltaTime) {
             glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
 
+        gpuClampVelocities();
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
         gpuMoveParticles(subDeltaTime);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
@@ -67,6 +77,15 @@ void GPUSimulation::gpuApplyForces(float deltaTime) {
     rlBindShaderBuffer(global.particles.accelerationSSBO, 1);
 
     rlSetUniform(deltaTimeLoc, &deltaTime, SHADER_UNIFORM_FLOAT, 1);
+
+    rlComputeShaderDispatch(getInvocationCount(), 1, 1);
+    rlDisableShader();
+}
+
+void GPUSimulation::gpuClampVelocities() {
+    rlEnableShader(m_clampProgram);
+
+    rlBindShaderBuffer(global.particles.velocitySSBO, 0);
 
     rlComputeShaderDispatch(getInvocationCount(), 1, 1);
     rlDisableShader();
