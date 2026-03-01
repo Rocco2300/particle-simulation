@@ -201,54 +201,64 @@ void CPUSimulation::resolvePlaneCollisions(Particle particle) {
     }
 }
 
-void CPUSimulation::resolveParticleCollisions(Particle particle) {
+void CPUSimulation::resolveParticleCollisionsSimple(Particle particle) {
     auto& pos1 = m_particleData->position[particle];
     auto& vel1 = m_particleData->velocity[particle];
 
-    // TODO: this could be done better
-    if (!m_spatialPartition) {
-        for (int i = 0; i < m_particleData->count; i++) {
-            auto& pos2 = m_particleData->position[i];
-            auto& vel2 = m_particleData->velocity[i];
+    for (int i = 0; i < m_particleData->count; i++) {
+        auto& pos2 = m_particleData->position[i];
+        auto& vel2 = m_particleData->velocity[i];
 
-            if (i != particle && isCollidingParticle(i, particle)) {
-                auto normal   = glm::normalize(pos2 - pos1);
-                auto distance = glm::distance(pos1, pos2);
+        if (i != particle && isCollidingParticle(i, particle)) {
+            auto normal   = glm::normalize(pos2 - pos1);
+            auto distance = glm::distance(pos1, pos2);
 
-                solveParticlePenetration(i, particle);
+            solveParticlePenetration(i, particle);
 
-                vel1 = glm::reflect(vel1, normal) * 0.95f;
-                vel2 = glm::reflect(vel2, normal) * 0.95f;
-            }
+            vel1 = glm::reflect(vel1, normal) * 0.95f;
+            vel2 = glm::reflect(vel2, normal) * 0.95f;
         }
-    } else {
-        auto triIndex = getParticleTriIndex(particle);
-        for (int z = -1; z <= 1; z++) {
-            for (int y = -1; y <= 1; y++) {
-                for (int x = -1; x <= 1; x++) {
-                    auto offset      = glm::ivec3(x, y, z);
-                    auto newTriIndex = triIndex + offset;
-                    if (!isInBounds(newTriIndex)) {
-                        continue;
-                    }
+    }
+}
 
-                    auto index = getIndex(newTriIndex);
-                    for (int secondParticle: m_grid[index]) {
-                        auto& pos2 = m_particleData->position[secondParticle];
-                        auto& vel2 = m_particleData->velocity[secondParticle];
+void CPUSimulation::resolveParticleCollisionsPartitioning(Particle particle) {
+    auto& pos1 = m_particleData->position[particle];
+    auto& vel1 = m_particleData->velocity[particle];
 
-                        if (secondParticle != particle &&
-                            isCollidingParticle(secondParticle, particle)) {
+    auto triIndex = getParticleTriIndex(particle);
+    for (int z = -1; z <= 1; z++) {
+        for (int y = -1; y <= 1; y++) {
+            for (int x = -1; x <= 1; x++) {
+                auto offset      = glm::ivec3(x, y, z);
+                auto newTriIndex = triIndex + offset;
+                if (!isInBounds(newTriIndex)) {
+                    continue;
+                }
 
-                            solveParticlePenetration(secondParticle, particle);
+                auto index = getIndex(newTriIndex);
+                for (int secondParticle: m_grid[index]) {
+                    auto& pos2 = m_particleData->position[secondParticle];
 
-                            auto normal = glm::normalize(pos2 - pos1);
+                    if (secondParticle != particle &&
+                        isCollidingParticle(secondParticle, particle)) {
 
-                            vel1 = glm::reflect(vel1, normal) * 0.95f;
-                        }
+                        solveParticlePenetration(secondParticle, particle);
+
+                        auto normal = glm::normalize(pos2 - pos1);
+                        vel1        = glm::reflect(vel1, normal) * 0.95f;
                     }
                 }
             }
         }
+    }
+}
+
+void CPUSimulation::resolveParticleCollisions(Particle particle) {
+
+    // TODO: this could be done better
+    if (!m_spatialPartition) {
+        resolveParticleCollisionsSimple(particle);
+    } else {
+        resolveParticleCollisionsPartitioning(particle);
     }
 }

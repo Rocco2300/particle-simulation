@@ -32,5 +32,8 @@ private:
     void solveParticlePenetration(Particle p1, Particle p2);
 
     void resolvePlaneCollisions(Particle particle);
+
+    void resolveParticleCollisionsSimple(Particle particle);
+    void resolveParticleCollisionsPartitioning(Particle particle);
     void resolveParticleCollisions(Particle particle);
 };
