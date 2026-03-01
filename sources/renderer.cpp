@@ -20,14 +20,18 @@ Renderer::Renderer(RendererContext& rendererContext)
     : m_camera{rendererContext.camera}
     , m_planeData{rendererContext.planeData}
     , m_particleData{rendererContext.particleData}
-    , m_simulationMode{rendererContext.simulationMode} {
+    , m_simulationMode{rendererContext.simulationMode}
+    , m_projectPath{rendererContext.projectPath} {
 
     generatePlaneMesh();
     generateSphereMesh();
 
+    auto shadersPath = m_projectPath / "shaders";
+    auto vertexShaderPath = shadersPath / "particle.vert";
+    auto fragmentShaderPath = shadersPath / "particle.frag";
     m_shader = LoadShader(
-            "C:/Users/grigo/repos/particle-simulation/shaders/particle.vert",
-            "C:/Users/grigo/repos/particle-simulation/shaders/particle.frag"
+            vertexShaderPath.string().c_str(),
+            fragmentShaderPath.string().c_str()
     );
 
     m_viewLoc  = GetShaderLocation(m_shader, "view");
@@ -59,26 +63,6 @@ void Renderer::draw() {
         DrawText(particleNo.c_str(), 10, 36, 24, DARKGREEN);
     }
     EndDrawing();
-}
-
-
-void Renderer::drawParticle(Particle particle) {
-    /*
-    auto& color    = m_particleData->color[particle];
-    auto& radius   = m_particleData->radius[particle];
-    auto& position = m_particleData->position[particle];
-
-    auto scale     = glm::scale({1}, glm::vec3(radius));
-    auto translate = glm::translate({1}, position);
-
-    auto transform = translate * scale;
-    rlPushMatrix();
-    {
-        rlMultMatrixf(glm::value_ptr(transform));
-        DrawModel(m_sphereModel, {0, 0, 0}, 1, color);
-    }
-    rlPopMatrix();
-    */
 }
 
 void Renderer::drawParticles() {

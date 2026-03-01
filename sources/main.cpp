@@ -5,8 +5,10 @@
 #include "renderer.hpp"
 #include "simulation.hpp"
 
-#include <iostream>
 #include <raylib.h>
+
+#include <filesystem>
+#include <iostream>
 
 int main(int argc, char* argv[]) {
     auto simulationMode = SimulationMode::CPU;
@@ -47,8 +49,10 @@ int main(int argc, char* argv[]) {
     ParticleWorld particleWorld;
     particleWorld.buildBoxWorld(particleNo);
 
+    auto projectPath = std::filesystem::current_path().parent_path();
     RendererContext rendererContext{
             .simulationMode = simulationMode,
+            .projectPath    = projectPath,
 
             .camera       = &camera,
             .planeData    = &particleWorld.planeData(),
@@ -56,12 +60,14 @@ int main(int argc, char* argv[]) {
     };
 
     SimulationContext simulationContext{
-            .steps = 3,
+            .simulationMode = simulationMode,
+            .projectPath    = projectPath,
+
+            .steps          = 3,
 
             .gravity          = true,
             .planeCollisions  = true,
             .spatialPartition = partition,
-            .simulationMode   = simulationMode,
 
             .planeData    = &particleWorld.planeData(),
             .particleData = &particleWorld.particleData()

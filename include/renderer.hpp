@@ -4,8 +4,11 @@
 
 #include <raylib.h>
 
+#include <filesystem>
+
  struct RendererContext {
      SimulationMode simulationMode;
+     std::filesystem::path projectPath;
 
      Camera3D* camera;
      PlaneData* planeData;
@@ -31,12 +34,13 @@ private:
     Camera3D* m_camera;
     PlaneData* m_planeData;
     ParticleData* m_particleData;
+
     SimulationMode m_simulationMode;
+    std::filesystem::path m_projectPath;
 
     void generatePlaneMesh();
     void generateSphereMesh();
 
     void drawParticles();
     void drawPlane(Plane plane);
-    void drawParticle(Particle particle);
 };

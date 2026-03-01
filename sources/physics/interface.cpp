@@ -9,6 +9,7 @@
 #include <rlgl.h>
 
 #include <iostream>
+#include <filesystem>
 
 Context context{};
 
@@ -94,14 +95,18 @@ void init() {
             0
     );
 
-    context.simulationMode = SimulationMode::GPU;
+    // placeholder since I am lazy
+    std::filesystem::path path = "C:/Users/grigo/repos/particle-simulation";
+    context.simulationMode     = SimulationMode::GPU;
     SimulationContext simulationContext{
+            .simulationMode = context.simulationMode,
+            .projectPath    = path,
+
             .steps = 3,
 
             .gravity          = false,
             .planeCollisions  = false,
             .spatialPartition = false,
-            .simulationMode   = context.simulationMode,
 
             .planeData    = nullptr,
             .particleData = &context.particleData,

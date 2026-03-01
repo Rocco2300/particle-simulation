@@ -6,46 +6,46 @@
 
 GPUSimulation::GPUSimulation(SimulationContext& simulationContext)
     : Simulation(simulationContext) {
-    char* applyCode =
-            LoadFileText("C:/Users/grigo/repos/particle-simulation/shaders/applyForces.comp");
+    auto shadersPath = m_projectPath / "shaders";
+
+    auto applyPath       = shadersPath / "applyForces.comp";
+    char* applyCode      = LoadFileText(applyPath.string().c_str());
     uint32_t applyShader = rlCompileShader(applyCode, RL_COMPUTE_SHADER);
     m_applyProgram       = rlLoadComputeShaderProgram(applyShader);
     UnloadFileText(applyCode);
 
-    char* clampCode =
-            LoadFileText("C:/Users/grigo/repos/particle-simulation/shaders/clampVelocity.comp");
+    auto clampPath       = shadersPath / "clampVelocity.comp";
+    char* clampCode      = LoadFileText(clampPath.string().c_str());
     uint32_t clampShader = rlCompileShader(clampCode, RL_COMPUTE_SHADER);
     m_clampProgram       = rlLoadComputeShaderProgram(clampShader);
     UnloadFileText(clampCode);
 
-    char* moveCode =
-            LoadFileText("C:/Users/grigo/repos/particle-simulation/shaders/moveParticles.comp");
+    auto movePath       = shadersPath / "moveParticles.comp";
+    char* moveCode      = LoadFileText(movePath.string().c_str());
     uint32_t moveShader = rlCompileShader(moveCode, RL_COMPUTE_SHADER);
     m_moveProgram       = rlLoadComputeShaderProgram(moveShader);
     UnloadFileText(moveCode);
 
-    char* planeCollisionCode = LoadFileText(
-            "C:/Users/grigo/repos/particle-simulation/shaders/resolvePlaneCollisions.comp"
-    );
+    auto planeCollisionPath        = shadersPath / "resolvePlaneCollisions.comp";
+    char* planeCollisionCode       = LoadFileText(planeCollisionPath.string().c_str());
     uint32_t planeCollisionsShader = rlCompileShader(planeCollisionCode, RL_COMPUTE_SHADER);
     m_planeCollisionsProgram       = rlLoadComputeShaderProgram(planeCollisionsShader);
     UnloadFileText(planeCollisionCode);
 
-    char* particleCollisionCode = LoadFileText(
-            "C:/Users/grigo/repos/particle-simulation/shaders/resolveParticleCollisions.comp"
-    );
+    auto particleCollisionPath        = shadersPath / "resolveParticleCollisions.comp";
+    char* particleCollisionCode       = LoadFileText(particleCollisionPath.string().c_str());
     uint32_t particleCollisionsShader = rlCompileShader(particleCollisionCode, RL_COMPUTE_SHADER);
     m_particleCollisionsProgram       = rlLoadComputeShaderProgram(particleCollisionsShader);
     UnloadFileText(particleCollisionCode);
 
-    char* populateGridCode =
-            LoadFileText("C:/Users/grigo/Repos/particle-simulation/shaders/populateGrid.comp");
+    auto populateGridPath       = shadersPath / "populateGrid.comp";
+    char* populateGridCode      = LoadFileText(populateGridPath.string().c_str());
     uint32_t populateGridShader = rlCompileShader(populateGridCode, RL_COMPUTE_SHADER);
     m_populateGridProgram       = rlLoadComputeShaderProgram(populateGridShader);
     UnloadFileText(populateGridCode);
 
-    char* clearGridCode =
-            LoadFileText("C:/Users/grigo/Repos/particle-simulation/shaders/clearGrid.comp");
+    auto clearGridPath       = shadersPath / "clearGrid.comp";
+    char* clearGridCode      = LoadFileText(clearGridPath.string().c_str());
     uint32_t clearGridShader = rlCompileShader(clearGridCode, RL_COMPUTE_SHADER);
     m_clearGridProgram       = rlLoadComputeShaderProgram(clearGridShader);
     UnloadFileText(clearGridCode);
