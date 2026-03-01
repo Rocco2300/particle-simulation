@@ -49,7 +49,6 @@ GPUSimulation::GPUSimulation(SimulationContext& simulationContext)
     uint32_t clearGridShader = rlCompileShader(clearGridCode, RL_COMPUTE_SHADER);
     m_clearGridProgram       = rlLoadComputeShaderProgram(clearGridShader);
     UnloadFileText(clearGridCode);
-
 }
 
 void GPUSimulation::update(float deltaTime) {
@@ -60,8 +59,10 @@ void GPUSimulation::update(float deltaTime) {
             glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
 
-        gpuClearGrid();
-        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+        if (m_spatialPartition) {
+            gpuClearGrid();
+            glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+        }
 
         gpuClampVelocities();
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -72,7 +73,11 @@ void GPUSimulation::update(float deltaTime) {
         if (m_planeCollisions) {
             gpuResolvePlaneCollisions();
             glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+        }
 
+        // TODO: low prio - might cause issues on superflat world
+        // particles getting out of the bounds of the grid
+        if (m_spatialPartition && m_planeCollisions) {
             gpuPopulateGrid();
             glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
@@ -92,7 +97,7 @@ void GPUSimulation::gpuPopulateGrid() {
     rlBindShaderBuffer(global.particles.positionSSBO, 0);
     rlBindShaderBuffer(global.particles.gridSSBO, 1);
 
-    constexpr int GridSize = 12 * 12 * 12;
+    constexpr int GridSize        = 12 * 12 * 12;
     constexpr int InvocationCount = GridSize / 32;
     rlComputeShaderDispatch(InvocationCount, 1, 1);
     rlDisableShader();
@@ -103,7 +108,7 @@ void GPUSimulation::gpuClearGrid() {
 
     rlBindShaderBuffer(global.particles.gridSSBO, 0);
 
-    constexpr int GridSize = 12 * 12 * 12;
+    constexpr int GridSize        = 12 * 12 * 12;
     constexpr int InvocationCount = GridSize / 32;
     rlComputeShaderDispatch(InvocationCount, 1, 1);
     rlDisableShader();
@@ -167,6 +172,7 @@ void GPUSimulation::gpuResolvePlaneCollisions() {
 void GPUSimulation::gpuResolveParticleCollisions() {
     rlEnableShader(m_particleCollisionsProgram);
 
+    auto partitionLoc     = rlGetLocationUniform(m_particleCollisionsProgram, "partitionSpace");
     auto particleCountLoc = rlGetLocationUniform(m_particleCollisionsProgram, "particleCount");
 
     rlBindShaderBuffer(global.particles.radiusSSBO, 0);
@@ -174,6 +180,8 @@ void GPUSimulation::gpuResolveParticleCollisions() {
     rlBindShaderBuffer(global.particles.velocitySSBO, 2);
     rlBindShaderBuffer(global.particles.gridSSBO, 3);
 
+    int spatialPartition = m_spatialPartition;
+    rlSetUniform(partitionLoc, &spatialPartition, SHADER_UNIFORM_INT, 1);
     rlSetUniform(particleCountLoc, &m_particleData->count, SHADER_UNIFORM_INT, 1);
 
     rlComputeShaderDispatch(getInvocationCount(), 1, 1);

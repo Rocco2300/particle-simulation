@@ -4,8 +4,10 @@
 
 struct SimulationContext {
     int steps;
+
     bool gravity;
     bool planeCollisions;
+    bool spatialPartition;
     SimulationMode simulationMode;
 
     PlaneData* planeData;
@@ -19,6 +21,7 @@ public:
         : m_steps{simulationContext.steps}
         , m_gravity{simulationContext.gravity}
         , m_planeCollisions{simulationContext.planeCollisions}
+        , m_spatialPartition{simulationContext.spatialPartition}
         , m_planeData{simulationContext.planeData}
         , m_particleData{simulationContext.particleData}
         , m_simulationMode{simulationContext.simulationMode} {}
@@ -29,8 +32,10 @@ public:
 
 protected:
     int m_steps;
+
     bool m_gravity;
     bool m_planeCollisions;
+    bool m_spatialPartition;
 
     PlaneData* m_planeData;
     ParticleData* m_particleData;

@@ -1,5 +1,5 @@
-#include "gpu_simulation.hpp"
 #include "cpu_simulation.hpp"
+#include "gpu_simulation.hpp"
 #include "objects.hpp"
 #include "particle_world.hpp"
 #include "renderer.hpp"
@@ -17,9 +17,19 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    bool partition{};
     int particleNo = MaxParticles;
     if (argc >= 3) {
-        particleNo = std::min(std::atoi(argv[2]), MaxParticles);
+        std::string gridString = argv[2];
+        if (gridString == "--partition") {
+            partition = true;
+        } else {
+            particleNo = std::min(std::atoi(argv[2]), MaxParticles);
+        }
+    }
+
+    if (argc >= 4) {
+        particleNo = std::min(std::atoi(argv[3]), MaxParticles);
     }
 
     const int ScreenWidth  = 800;
@@ -37,21 +47,23 @@ int main(int argc, char* argv[]) {
     ParticleWorld particleWorld;
     particleWorld.buildBoxWorld(particleNo);
 
-    RendererContext rendererContext {
+    RendererContext rendererContext{
             .simulationMode = simulationMode,
 
-            .camera = &camera,
-            .planeData = &particleWorld.planeData(),
+            .camera       = &camera,
+            .planeData    = &particleWorld.planeData(),
             .particleData = &particleWorld.particleData()
     };
 
-    SimulationContext simulationContext {
+    SimulationContext simulationContext{
             .steps = 3,
-            .gravity = true,
-            .planeCollisions = true,
-            .simulationMode = simulationMode,
 
-            .planeData = &particleWorld.planeData(),
+            .gravity          = true,
+            .planeCollisions  = true,
+            .spatialPartition = partition,
+            .simulationMode   = simulationMode,
+
+            .planeData    = &particleWorld.planeData(),
             .particleData = &particleWorld.particleData()
     };
 

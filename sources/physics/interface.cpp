@@ -1,7 +1,7 @@
 #include "interface.hpp"
 
-#include "renderer.hpp"
 #include "gpu_simulation.hpp"
+#include "renderer.hpp"
 
 #include <glad.h>
 
@@ -96,9 +96,12 @@ void init() {
 
     context.simulationMode = SimulationMode::GPU;
     SimulationContext simulationContext{
-            .gravity         = false,
-            .planeCollisions = false,
-            .simulationMode  = context.simulationMode,
+            .steps = 3,
+
+            .gravity          = false,
+            .planeCollisions  = false,
+            .spatialPartition = false,
+            .simulationMode   = context.simulationMode,
 
             .planeData    = nullptr,
             .particleData = &context.particleData,
