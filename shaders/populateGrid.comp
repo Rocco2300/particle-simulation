@@ -1,0 +1,52 @@
+#version 440
+
+layout (local_size_x = 32, local_size_y = 1, local_size_z = 1) in;
+
+#define MAX_PARTICLES 5000
+#define GRID_SIZE 12 * 12 * 12
+#define CELL_SIZE 100
+
+struct Cell {
+    int count;
+    int list[CELL_SIZE];
+};
+
+uniform float deltaTime;
+
+layout(std430, binding = 0) buffer positions {
+    vec3 position[MAX_PARTICLES];
+};
+
+layout(std430, binding = 1) buffer grid {
+    Cell cells[GRID_SIZE];
+};
+
+ivec3 getTriIndex(int particle) {
+    vec3 pos = position[particle];
+
+    vec3 temp = pos;
+    temp.x += 6.0;
+    temp.y += 1.0;
+    temp.z += 6.0;
+
+    ivec3 res;
+    res.x = int(floor(temp.x));
+    res.y = int(floor(temp.y));
+    res.z = int(floor(temp.z));
+
+    return res;
+}
+
+int getIndex(ivec3 triIndex) {
+    return triIndex.z * (12 * 12) + triIndex.y * 12 + triIndex.x;
+}
+
+void main() {
+    int particle = int(gl_GlobalInvocationID.x);
+
+    ivec3 triIndex = getTriIndex(particle);
+    int index = getIndex(triIndex);
+
+    uint insertionPoint = atomicAdd(cells[index].count, 1);
+    cells[index].list[insertionPoint] = particle;
+}

@@ -15,7 +15,13 @@ private:
     uint32_t m_planeCollisionsProgram;
     uint32_t m_particleCollisionsProgram;
 
+    uint32_t m_populateGridProgram;
+    uint32_t m_clearGridProgram;
+
     int getInvocationCount() const;
+
+    void gpuPopulateGrid();
+    void gpuClearGrid();
 
     void gpuApplyForces(float deltaTime);
     void gpuClampVelocities();

@@ -2,6 +2,19 @@
 
 #include <glm/glm.hpp>
 
+// structs just used to set ssbo sizes
+struct Cell {
+    int size{};
+    int list[100]{};
+};
+
+constexpr int Size = 12;
+constexpr int GridNo = Size * Size * Size;
+
+struct Grid {
+    Cell cells[GridNo]{};
+};
+
 enum class SimulationMode {
     CPU,
     GPU
@@ -19,6 +32,8 @@ struct ParticlesGlobalData {
     uint32_t velocitySSBO;
     uint32_t accelerationSSBO;
     uint32_t colorSSBO;
+
+    uint32_t gridSSBO;
 };
 
 struct Global {

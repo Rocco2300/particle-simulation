@@ -1,5 +1,4 @@
 #include "gpu_simulation.hpp"
-
 #include <glad.h>
 
 #include <raylib.h>
@@ -38,6 +37,19 @@ GPUSimulation::GPUSimulation(SimulationContext& simulationContext)
     uint32_t particleCollisionsShader = rlCompileShader(particleCollisionCode, RL_COMPUTE_SHADER);
     m_particleCollisionsProgram       = rlLoadComputeShaderProgram(particleCollisionsShader);
     UnloadFileText(particleCollisionCode);
+
+    char* populateGridCode =
+            LoadFileText("C:/Users/grigo/Repos/particle-simulation/shaders/populateGrid.comp");
+    uint32_t populateGridShader = rlCompileShader(populateGridCode, RL_COMPUTE_SHADER);
+    m_populateGridProgram       = rlLoadComputeShaderProgram(populateGridShader);
+    UnloadFileText(populateGridCode);
+
+    char* clearGridCode =
+            LoadFileText("C:/Users/grigo/Repos/particle-simulation/shaders/clearGrid.comp");
+    uint32_t clearGridShader = rlCompileShader(clearGridCode, RL_COMPUTE_SHADER);
+    m_clearGridProgram       = rlLoadComputeShaderProgram(clearGridShader);
+    UnloadFileText(clearGridCode);
+
 }
 
 void GPUSimulation::update(float deltaTime) {
@@ -48,6 +60,9 @@ void GPUSimulation::update(float deltaTime) {
             glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
 
+        gpuClearGrid();
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
         gpuClampVelocities();
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
@@ -56,6 +71,9 @@ void GPUSimulation::update(float deltaTime) {
 
         if (m_planeCollisions) {
             gpuResolvePlaneCollisions();
+            glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+            gpuPopulateGrid();
             glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
         }
 
@@ -66,6 +84,29 @@ void GPUSimulation::update(float deltaTime) {
 
 int GPUSimulation::getInvocationCount() const {
     return std::ceil(static_cast<float>(m_particleData->count) / 32.f);
+}
+
+void GPUSimulation::gpuPopulateGrid() {
+    rlEnableShader(m_populateGridProgram);
+
+    rlBindShaderBuffer(global.particles.positionSSBO, 0);
+    rlBindShaderBuffer(global.particles.gridSSBO, 1);
+
+    constexpr int GridSize = 12 * 12 * 12;
+    constexpr int InvocationCount = GridSize / 32;
+    rlComputeShaderDispatch(InvocationCount, 1, 1);
+    rlDisableShader();
+}
+
+void GPUSimulation::gpuClearGrid() {
+    rlEnableShader(m_clearGridProgram);
+
+    rlBindShaderBuffer(global.particles.gridSSBO, 0);
+
+    constexpr int GridSize = 12 * 12 * 12;
+    constexpr int InvocationCount = GridSize / 32;
+    rlComputeShaderDispatch(InvocationCount, 1, 1);
+    rlDisableShader();
 }
 
 void GPUSimulation::gpuApplyForces(float deltaTime) {
@@ -131,6 +172,7 @@ void GPUSimulation::gpuResolveParticleCollisions() {
     rlBindShaderBuffer(global.particles.radiusSSBO, 0);
     rlBindShaderBuffer(global.particles.positionSSBO, 1);
     rlBindShaderBuffer(global.particles.velocitySSBO, 2);
+    rlBindShaderBuffer(global.particles.gridSSBO, 3);
 
     rlSetUniform(particleCountLoc, &m_particleData->count, SHADER_UNIFORM_INT, 1);
 

@@ -28,6 +28,15 @@ ParticleWorld::ParticleWorld() {
     global.particles.velocitySSBO = rlLoadShaderBuffer(sizeof(ParticleData::velocity), nullptr, RL_DYNAMIC_COPY);
     global.particles.accelerationSSBO = rlLoadShaderBuffer(sizeof(ParticleData::acceleration), nullptr, RL_DYNAMIC_COPY);
     global.particles.colorSSBO = rlLoadShaderBuffer(sizeof(ParticleData::color), nullptr, RL_DYNAMIC_COPY);
+
+    Grid grid{};
+    global.particles.gridSSBO = rlLoadShaderBuffer(sizeof(Grid), nullptr, RL_DYNAMIC_COPY);
+    rlUpdateShaderBuffer(
+            global.particles.gridSSBO,
+            &grid,
+            sizeof(Grid),
+            0
+    );
     // clang-format on
 }
 
