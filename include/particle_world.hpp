@@ -34,7 +34,7 @@ public:
     void spawn(glm::vec3 position, bool randomVelocity = false);
 
     void addPlane(glm::vec2 size, glm::vec3 position, glm::vec3 normal);
-    void addParticle(float radius, glm::vec3 position, glm::vec3 velocity, glm::vec4 color);
+    void addParticle(int type, float radius, glm::vec3 position, glm::vec3 velocity, glm::vec4 color);
 
     void buildBoxWorld(int particleNo = MaxParticles);
     void buildSuperflatWorld(int particleNo = MaxParticles);

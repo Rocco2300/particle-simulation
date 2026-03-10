@@ -2,6 +2,9 @@
 
 #include <glm/glm.hpp>
 
+#define BOX_TYPE 1
+#define SPHERE_TYPE 0
+
 // structs just used to set ssbo sizes
 struct Cell {
     int size{};
@@ -27,6 +30,7 @@ struct PlanesGlobalData {
 };
 
 struct ParticlesGlobalData {
+    uint32_t typeSSBO;
     uint32_t radiusSSBO;
     uint32_t positionSSBO;
     uint32_t velocitySSBO;
@@ -59,6 +63,7 @@ struct PlaneData {
 
 struct ParticleData {
     int count{};
+    int type[MaxParticles]{}; // 0 is sphere, 1 is box
     float radius[MaxParticles]{};
     glm::vec4 position[MaxParticles]{};
     glm::vec4 velocity[MaxParticles]{};

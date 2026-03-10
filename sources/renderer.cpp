@@ -23,20 +23,19 @@ Renderer::Renderer(RendererContext& rendererContext)
     , m_simulationMode{rendererContext.simulationMode}
     , m_projectPath{rendererContext.projectPath} {
 
+    generateCubeMesh();
     generatePlaneMesh();
     generateSphereMesh();
 
-    auto shadersPath = m_projectPath / "shaders";
-    auto vertexShaderPath = shadersPath / "particle.vert";
+    auto shadersPath        = m_projectPath / "shaders";
+    auto vertexShaderPath   = shadersPath / "particle.vert";
     auto fragmentShaderPath = shadersPath / "particle.frag";
-    m_shader = LoadShader(
-            vertexShaderPath.string().c_str(),
-            fragmentShaderPath.string().c_str()
-    );
+    m_shader = LoadShader(vertexShaderPath.string().c_str(), fragmentShaderPath.string().c_str());
 
-    m_viewLoc  = GetShaderLocation(m_shader, "view");
-    m_projLoc  = GetShaderLocation(m_shader, "projection");
-    m_countLoc = GetShaderLocation(m_shader, "count");
+    m_viewLoc          = GetShaderLocation(m_shader, "view");
+    m_projLoc          = GetShaderLocation(m_shader, "projection");
+    m_countLoc         = GetShaderLocation(m_shader, "count");
+    m_renderingTypeLoc = GetShaderLocation(m_shader, "renderingType");
 }
 
 void Renderer::draw() {
@@ -46,6 +45,7 @@ void Renderer::draw() {
 
         BeginMode3D(*m_camera);
         {
+            //DrawModel(m_cubeModel, {0, 0, 0}, 1, RED);
             if (m_planeData) {
                 for (int plane = 0; plane < m_planeData->count; plane++) {
                     drawPlane(plane);
@@ -54,7 +54,7 @@ void Renderer::draw() {
 
             drawParticles();
 
-            DrawGrid(100, 1.f);
+            DrawGrid(10, 1.f);
         }
         EndMode3D();
 
@@ -68,9 +68,10 @@ void Renderer::draw() {
 void Renderer::drawParticles() {
     BeginShaderMode(m_shader);
     {
-        rlBindShaderBuffer(global.particles.radiusSSBO, 0);
-        rlBindShaderBuffer(global.particles.positionSSBO, 1);
-        rlBindShaderBuffer(global.particles.colorSSBO, 2);
+        rlBindShaderBuffer(global.particles.typeSSBO, 0);
+        rlBindShaderBuffer(global.particles.radiusSSBO, 1);
+        rlBindShaderBuffer(global.particles.positionSSBO, 2);
+        rlBindShaderBuffer(global.particles.colorSSBO, 3);
 
         float aspect    = (float) GetScreenWidth() / (float) GetScreenHeight();
         auto view       = GetCameraViewMatrix(m_camera);
@@ -96,10 +97,25 @@ void Renderer::drawParticles() {
             );
         }
 
+        int renderingType = SPHERE_TYPE;
+        SetShaderValue(m_shader, m_renderingTypeLoc, &renderingType, SHADER_UNIFORM_INT);
         auto& mesh = m_sphereModel.meshes[0];
         rlEnableVertexArray(mesh.vaoId);
         rlDrawVertexArrayInstanced(0, mesh.vertexCount, m_particleData->count);
         rlEnableVertexArray(0);
+
+        /*
+        rlDisableBackfaceCulling();
+        int renderingType = BOX_TYPE;
+        SetShaderValue(m_shader, m_renderingTypeLoc, &renderingType, SHADER_UNIFORM_INT);
+        auto& mesh = m_cubeModel.meshes[0];
+        auto& indices = m_cubeModel.meshes[0].indices;
+        rlEnableVertexArray(mesh.vaoId);
+        //rlDrawVertexArrayInstanced(0, mesh.vertexCount, m_particleData->count);
+        rlDrawVertexArrayElementsInstanced(0, mesh.triangleCount * 3, nullptr, m_particleData->count);
+        rlEnableVertexArray(0);
+        rlEnableBackfaceCulling();
+        */
     }
     EndShaderMode();
 }
@@ -121,6 +137,16 @@ void Renderer::drawPlane(Plane plane) {
         DrawModelWires(m_planeModel, {0, 0, 0}, 1, DARKGRAY);
     }
     rlPopMatrix();
+}
+
+void Renderer::generateCubeMesh() {
+    Mesh mesh   = GenMeshCube(1, 1, 1);
+    m_cubeModel = LoadModelFromMesh(mesh);
+
+    auto image   = GenImageColor(1, 1, WHITE);
+    auto texture = LoadTextureFromImage(image);
+
+    m_cubeModel.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
 }
 
 void Renderer::generatePlaneMesh() {

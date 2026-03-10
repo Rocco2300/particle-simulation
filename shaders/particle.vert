@@ -6,6 +6,7 @@ in vec3 vertexNormal;
 in vec3 vertexPosition;
 in vec2 vertexTexCoord;
 
+out int instanceId;
 out vec4 diffuseColor;
 
 uniform mat4 view;
@@ -13,15 +14,15 @@ uniform mat4 projection;
 
 uniform int count;
 
-layout(std430, binding=0) buffer radii {
+layout(std430, binding=1) buffer radii {
     float radius[MAX_PARTICLES];
 };
 
-layout(std430, binding = 1) buffer positions {
+layout(std430, binding = 2) buffer positions {
     vec3 position[MAX_PARTICLES];
 };
 
-layout(std430, binding = 2) buffer colors {
+layout(std430, binding = 3) buffer colors {
     vec4 color[MAX_PARTICLES];
 };
 
@@ -44,6 +45,7 @@ mat4 getModel(int index) {
 
 void main() {
     int index = gl_InstanceID;
+    instanceId = gl_InstanceID;
 
     mat4 mvp = projection * view * getModel(index);
     gl_Position = mvp * vec4(vertexPosition, 1.0);

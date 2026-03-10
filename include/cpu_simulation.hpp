@@ -28,7 +28,14 @@ private:
     bool isCollidingPlane(Particle particle, Plane plane);
     void solvePlanePenetration(Particle particle, Plane plane);
 
+    bool isCollidingBoxBox(Particle p1, Particle p2);
+    bool isCollidingBoxSphere(Particle p1, Particle p2);
+    bool isCollidingSphereSphere(Particle p1, Particle p2);
     bool isCollidingParticle(Particle p1, Particle p2);
+
+    void solveBoxBoxPenetration(Particle p1, Particle p2);
+    void solveBoxSpherePenetration(Particle p1, Particle p2);
+    void solveSphereSpherePenetration(Particle p1, Particle p2);
     void solveParticlePenetration(Particle p1, Particle p2);
 
     void resolvePlaneCollisions(Particle particle);

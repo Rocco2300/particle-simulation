@@ -126,6 +126,8 @@ void CPUSimulation::moveParticle(Particle particle, float deltaTime) {
 }
 
 float CPUSimulation::getSignedDistance(Particle particle, Plane plane) {
+    // This works for spheres and also for cubes, since we deal with cubes
+    // as a positions and "radius" which is half size
     auto& position      = m_particleData->position[particle];
     auto& planeNormal   = m_planeData->normal[plane];
     auto& planePosition = m_planeData->position[plane];
@@ -134,12 +136,16 @@ float CPUSimulation::getSignedDistance(Particle particle, Plane plane) {
 }
 
 bool CPUSimulation::isCollidingPlane(Particle particle, Plane plane) {
+    // This works for spheres and also for cubes, since we deal with cubes
+    // as a positions and "radius" which is half size
     auto& radius = m_particleData->radius[particle];
 
     return getSignedDistance(particle, plane) < radius;
 }
 
 void CPUSimulation::solvePlanePenetration(Particle particle, Plane plane) {
+    // This works for spheres and also for cubes, since we deal with cubes
+    // as a positions and "radius" which is half size and we are axis bound
     auto& radius      = m_particleData->radius[particle];
     auto& position    = m_particleData->position[particle];
     auto& planeNormal = m_planeData->normal[plane];
@@ -149,22 +155,105 @@ void CPUSimulation::solvePlanePenetration(Particle particle, Plane plane) {
     position += planeNormal * moveAmount;
 }
 
-bool CPUSimulation::isCollidingParticle(Particle p1, Particle p2) {
+bool CPUSimulation::isCollidingBoxBox(Particle p1, Particle p2) {
+    auto& pos1 = m_particleData->position[p1];
+    auto& pos2 = m_particleData->position[p2];
+    auto& rad1 = m_particleData->radius[p1];
+    auto& rad2 = m_particleData->radius[p2];
+
+    auto xDistance = std::abs(pos1.x - pos2.x);
+    auto yDistance = std::abs(pos1.y - pos2.y);
+    auto zDistance = std::abs(pos2.z - pos1.z);
+
+    auto xOverlap = xDistance <= rad1 + rad2;
+    auto yOverlap = yDistance <= rad1 + rad2;
+    auto zOverlap = zDistance <= rad1 + rad2;
+
+    return xOverlap && yOverlap && zOverlap;
+}
+
+bool CPUSimulation::isCollidingBoxSphere(Particle p1, Particle p2) {
+    auto& boxPos       = m_particleData->position[p1];
+    auto& spherePos    = m_particleData->position[p2];
+    auto& boxSize      = m_particleData->radius[p1];
+    auto& sphereRadius = m_particleData->radius[p2];
+
+    auto minPos     = boxPos - glm::vec4(1.f) * boxSize;
+    auto maxPos     = boxPos + glm::vec4(1.f) * boxSize;
+    auto clampedPos = glm::clamp(spherePos, minPos, maxPos);
+
+    return glm::distance(spherePos, clampedPos) < sphereRadius;
+}
+
+bool CPUSimulation::isCollidingSphereSphere(Particle p1, Particle p2) {
     auto& rad1 = m_particleData->radius[p1];
     auto& rad2 = m_particleData->radius[p2];
     auto& pos1 = m_particleData->position[p1];
     auto& pos2 = m_particleData->position[p2];
 
-    auto distance = glm::distance(pos1, pos2);
+    return glm::distance(pos1, pos2) < rad1 + rad2;
+}
 
-    if (distance < rad1 + rad2) {
-        return true;
+bool CPUSimulation::isCollidingParticle(Particle p1, Particle p2) {
+    auto& type1 = m_particleData->type[p1];
+    auto& type2 = m_particleData->type[p2];
+
+    if (type1 == BOX_TYPE && type2 == BOX_TYPE) {
+        return isCollidingBoxBox(p1, p2);
+    }
+
+    if (type1 == SPHERE_TYPE && type2 == SPHERE_TYPE) {
+        return isCollidingSphereSphere(p1, p2);
+    }
+
+    if (type1 == BOX_TYPE) {
+        return isCollidingBoxSphere(p1, p2);
+    }
+
+    if (type2 == BOX_TYPE) {
+        return isCollidingBoxSphere(p2, p1);
     }
 
     return false;
 }
 
-void CPUSimulation::solveParticlePenetration(Particle p1, Particle p2) {
+void CPUSimulation::solveBoxBoxPenetration(Particle p1, Particle p2) {
+    auto& pos1 = m_particleData->position[p1];
+    auto& pos2 = m_particleData->position[p2];
+    auto& rad1 = m_particleData->radius[p1];
+    auto& rad2 = m_particleData->radius[p2];
+
+    auto xOverlap = pos2.x - pos1.x;
+    auto yOverlap = pos2.y - pos1.y;
+    auto zOverlap = pos2.z - pos1.z;
+
+    auto overlap = glm::vec4(xOverlap, yOverlap, zOverlap, 0.0f);
+
+    pos1 += overlap * -(1.0f / 2.0f + 0.0001f);
+    if (!m_spatialPartition) {
+        pos2 += overlap * (1.0f / 2.0f + 0.0001f);
+    }
+}
+
+void CPUSimulation::solveBoxSpherePenetration(Particle p1, Particle p2) {
+    auto& boxPos       = m_particleData->position[p1];
+    auto& spherePos    = m_particleData->position[p2];
+    auto& boxSize      = m_particleData->radius[p1];
+    auto& sphereRadius = m_particleData->radius[p2];
+
+    auto minPos     = boxPos - glm::vec4(1.f) * boxSize;
+    auto maxPos     = boxPos + glm::vec4(1.f) * boxSize;
+    auto clampedPos = glm::clamp(spherePos, minPos, maxPos);
+
+    auto overlap = spherePos - clampedPos;
+
+    boxPos += overlap * -(1.0f / 2.0f + 0.0001f);
+    if (!m_spatialPartition) {
+        spherePos += overlap * (1.0f / 2.0f + 0.0001f);
+    }
+}
+
+void CPUSimulation::solveSphereSpherePenetration(Particle p1, Particle p2) {
     auto& rad1 = m_particleData->radius[p1];
     auto& rad2 = m_particleData->radius[p2];
     auto& pos1 = m_particleData->position[p1];
@@ -177,26 +266,53 @@ void CPUSimulation::solveParticlePenetration(Particle p1, Particle p2) {
         pos1 += vel * 0.001f;
     }
 
-    auto normal     = glm::normalize(pos2 - pos1);
-    auto distance   = glm::distance(pos1, pos2);
-    auto moveAmount = rad1 + rad2 - distance;
+    auto overlap = pos2 - pos1;
+    //auto normal     = glm::normalize(pos2 - pos1);
+    //auto distance   = glm::distance(pos1, pos2);
+    //auto moveAmount = rad1 + rad2 - distance;
 
-    pos1 += normal * -((moveAmount / 2.0f) + 0.0001f);
-
+    pos1 += overlap * -(1.0f / 2.0f + 0.0001f);
+    //pos1 += normal * -(moveAmount / 2.0f + 0.0001f);
     if (!m_spatialPartition) {
-        pos2 += normal * ((moveAmount / 2.0f) + 0.0001f);
+        pos2 += overlap * (1.0f / 2.0f + 0.0001f);
+        //pos2 += normal * (moveAmount / 2.0f + 0.0001f);
+    }
+}
+
+void CPUSimulation::solveParticlePenetration(Particle p1, Particle p2) {
+    auto& type1 = m_particleData->type[p1];
+    auto& type2 = m_particleData->type[p2];
+
+    if (type1 == BOX_TYPE && type2 == BOX_TYPE) {
+        solveBoxBoxPenetration(p1, p2);
+        return;
+    }
+
+    if (type1 == SPHERE_TYPE && type2 == SPHERE_TYPE) {
+        solveSphereSpherePenetration(p1, p2);
+        return;
+    }
+
+    if (type1 == BOX_TYPE) {
+        solveBoxSpherePenetration(p1, p2);
+        return;
+    }
+
+    if (type2 == BOX_TYPE) {
+        solveBoxSpherePenetration(p2, p1);
+        return;
     }
 }
 
 void CPUSimulation::resolvePlaneCollisions(Particle particle) {
-    auto& vel1 = m_particleData->velocity[particle];
+    auto& vel = m_particleData->velocity[particle];
 
     for (int i = 0; i < m_planeData->count; i++) {
         if (isCollidingPlane(particle, i)) {
             solvePlanePenetration(particle, i);
 
             auto& normal = m_planeData->normal[i];
-            vel1         = glm::reflect(vel1, normal) * 0.90f;
+            vel          = glm::reflect(vel, normal) * 0.90f;
         }
     }
 }

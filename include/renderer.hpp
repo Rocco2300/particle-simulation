@@ -27,7 +27,9 @@ private:
     int m_viewLoc;
     int m_projLoc;
     int m_countLoc;
+    int m_renderingTypeLoc;
 
+    Model m_cubeModel;
     Model m_planeModel;
     Model m_sphereModel;
 
@@ -38,6 +40,7 @@ private:
     SimulationMode m_simulationMode;
     std::filesystem::path m_projectPath;
 
+    void generateCubeMesh();
     void generatePlaneMesh();
     void generateSphereMesh();
 

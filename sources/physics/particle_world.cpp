@@ -23,6 +23,7 @@ ParticleWorld::ParticleWorld() {
     global.planes.normalSSBO = rlLoadShaderBuffer(sizeof(PlaneData::normal), nullptr, RL_DYNAMIC_COPY);
     global.planes.positionSSBO = rlLoadShaderBuffer(sizeof(PlaneData::position), nullptr, RL_DYNAMIC_COPY);
 
+    global.particles.typeSSBO = rlLoadShaderBuffer(sizeof(ParticleData::type), nullptr, RL_DYNAMIC_COPY);
     global.particles.radiusSSBO = rlLoadShaderBuffer(sizeof(ParticleData::radius), nullptr, RL_DYNAMIC_COPY);
     global.particles.positionSSBO = rlLoadShaderBuffer(sizeof(ParticleData::position), nullptr, RL_DYNAMIC_COPY);
     global.particles.velocitySSBO = rlLoadShaderBuffer(sizeof(ParticleData::velocity), nullptr, RL_DYNAMIC_COPY);
@@ -40,6 +41,14 @@ ParticleWorld::ParticleWorld() {
     // clang-format on
 }
 
+static int getRandomType() {
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    static std::uniform_int_distribution dist(0, 1);
+
+    return dist(gen);
+}
+
 void ParticleWorld::spawn(glm::vec3 position, bool randomVelocity) {
     auto velocity = glm::vec3(0);
     auto color    = getRandomColor();
@@ -49,7 +58,7 @@ void ParticleWorld::spawn(glm::vec3 position, bool randomVelocity) {
         velocity = glm::normalize(glm::vec3(-1, -1, 1) + dir) * 20.f;
     }
 
-    addParticle(0.125f, position, velocity, color);
+    addParticle(getRandomType(), 0.125f, position, velocity, color);
 
     uploadParticleData(m_particleData.count - 1, false);
 }
@@ -76,11 +85,13 @@ void ParticleWorld::addPlane(glm::vec2 size, glm::vec3 position, glm::vec3 norma
 }
 
 void ParticleWorld::addParticle(
+        int type,
         float radius,
         glm::vec3 position,
         glm::vec3 velocity,
         glm::vec4 color
 ) {
+    m_particleData.type[m_particleData.count]     = type;
     m_particleData.radius[m_particleData.count]   = radius;
     m_particleData.position[m_particleData.count] = glm::vec4(position, 0);
     m_particleData.velocity[m_particleData.count] = glm::vec4(velocity, 0);
@@ -109,7 +120,13 @@ void ParticleWorld::buildBoxWorld(int particleNo) {
                     break;
                 }
 
-                addParticle(0.125f, {x, y, z}, getRandomDirection() * 20.f, getRandomColor());
+                addParticle(
+                        SPHERE_TYPE,
+                        0.125f,
+                        {x, y, z},
+                        getRandomDirection() * 20.f,
+                        getRandomColor()
+                );
             }
         }
     }
@@ -129,7 +146,7 @@ void ParticleWorld::buildSuperflatWorld(int particleNo) {
                     break;
                 }
 
-                addParticle(0.125f, {x, y, z}, {0, 0, 0}, getRandomColor());
+                addParticle(0, 0.125f, {x, y, z}, {0, 0, 0}, getRandomColor());
             }
         }
     }
@@ -184,6 +201,13 @@ void ParticleWorld::uploadParticleData(int offset, bool partialUpdate) {
     if (partialUpdate) {
         return;
     }
+
+    rlUpdateShaderBuffer(
+            global.particles.typeSSBO,
+            m_particleData.type + offset,
+            sizeof(m_particleData.type) - offset * sizeof(int),
+            offset * sizeof(int)
+    );
 
     rlUpdateShaderBuffer(
             global.particles.positionSSBO,
