@@ -12,9 +12,9 @@ layout(std430, binding=0) buffer types {
 };
 
 void main() {
-    //if (renderingType != type[instanceId]) {
-    //    discard;
-    //}
+    if (renderingType != type[instanceId]) {
+        discard;
+    }
 
     gl_FragColor = diffuseColor;
 }

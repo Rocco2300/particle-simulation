@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
             .simulationMode = simulationMode,
             .projectPath    = projectPath,
 
-            .steps = 3,
+            .steps = 5,
 
             .gravity          = true,
             .planeCollisions  = true,

@@ -1,6 +1,23 @@
 #include "cpu_simulation.hpp"
 
+#include <random>
 #include <iostream>
+
+// TODO: this is a temp fix
+static glm::vec3 getRandomDirection() {
+    constexpr std::array<glm::vec3, 8> directions{
+                {{1, 1, 1},
+                 {1, 1, -1},
+                 {-1, 1, 1},
+                 {-1, 1, -1}}
+    };
+
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    static std::uniform_int_distribution dist(0, 3);
+
+    return glm::normalize(directions[dist(gen)]);
+}
 
 CPUSimulation::CPUSimulation(SimulationContext& simulationContext)
     : Simulation(simulationContext) {
@@ -227,11 +244,15 @@ void CPUSimulation::solveBoxBoxPenetration(Particle p1, Particle p2) {
     auto yOverlap = pos2.y - pos1.y;
     auto zOverlap = pos2.z - pos1.z;
 
-    auto overlap = glm::vec4(xOverlap, yOverlap, zOverlap, 0.0f);
+    auto overlap  = glm::vec4(xOverlap, yOverlap, zOverlap, 0.0f);
+    auto normal   = glm::normalize(overlap);
+    auto distance = glm::length(overlap);
 
-    pos1 += overlap * -(1.0f / 2.0f + 0.0001f);
+    //pos1 += overlap * -(1.0f / 2.0f + 0.0001f);
+    pos1 += normal * (-distance / 2.0f + 0.0001f);
     if (!m_spatialPartition) {
-        pos2 += overlap * (1.0f / 2.0f + 0.0001f);
+        //pos2 += overlap * (1.0f / 2.0f + 0.0001f);
+        pos2 += normal * (distance / 2.0f + 0.0001f);
     }
 }
 
@@ -241,15 +262,28 @@ void CPUSimulation::solveBoxSpherePenetration(Particle p1, Particle p2) {
     auto& boxSize      = m_particleData->radius[p1];
     auto& sphereRadius = m_particleData->radius[p2];
 
+    auto prevBoxPos    = boxPos;
+    auto prevSpherePos = spherePos;
+
     auto minPos     = boxPos - glm::vec4(1.f) * boxSize;
     auto maxPos     = boxPos + glm::vec4(1.f) * boxSize;
     auto clampedPos = glm::clamp(spherePos, minPos, maxPos);
 
-    auto overlap = spherePos - clampedPos;
+    auto distance = glm::distance(spherePos, clampedPos);
+    if (distance == 0.0f) {
+        auto dir = getRandomDirection();
+        spherePos += glm::vec4(dir * 0.001f, 0.0f);
+        distance = glm::distance(spherePos, clampedPos);
+    }
 
-    boxPos += overlap * -(1.0f / 2.0f + 0.0001f);
+    auto normal   = glm::normalize(spherePos - clampedPos);
+    //auto overlap  = spherePos - clampedPos;
+
+    //boxPos += overlap * -(1.0f / 2.0f + 0.0001f);
+    boxPos += normal * (-distance / 2.0f + 0.0001f);
     if (!m_spatialPartition) {
-        spherePos += overlap * (1.0f / 2.0f + 0.0001f);
+        //spherePos += overlap * (1.0f / 2.0f + 0.0001f);
+        spherePos += normal * (distance / 2.0f + 0.0001f);
     }
 }
 
@@ -266,16 +300,13 @@ void CPUSimulation::solveSphereSpherePenetration(Particle p1, Particle p2) {
         pos1 += vel * 0.001f;
     }
 
-    auto overlap = pos2 - pos1;
-    //auto normal     = glm::normalize(pos2 - pos1);
-    //auto distance   = glm::distance(pos1, pos2);
-    //auto moveAmount = rad1 + rad2 - distance;
+    auto normal     = glm::normalize(pos2 - pos1);
+    auto distance   = glm::distance(pos1, pos2);
+    auto moveAmount = rad1 + rad2 - distance;
 
-    pos1 += overlap * -(1.0f / 2.0f + 0.0001f);
-    //pos1 += normal * -(moveAmount / 2.0f + 0.0001f);
+    pos1 += normal * -(moveAmount / 2.0f + 0.0001f);
     if (!m_spatialPartition) {
-        pos2 += overlap * (1.0f / 2.0f + 0.0001f);
-        //pos2 += normal * (moveAmount / 2.0f + 0.0001f);
+        pos2 += normal * (moveAmount / 2.0f + 0.0001f);
     }
 }
 

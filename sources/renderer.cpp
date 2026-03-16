@@ -97,25 +97,20 @@ void Renderer::drawParticles() {
             );
         }
 
-        int renderingType = SPHERE_TYPE;
-        SetShaderValue(m_shader, m_renderingTypeLoc, &renderingType, SHADER_UNIFORM_INT);
-        auto& mesh = m_sphereModel.meshes[0];
+        int sphereRenderingType = SPHERE_TYPE;
+        SetShaderValue(m_shader, m_renderingTypeLoc, &sphereRenderingType, SHADER_UNIFORM_INT);
+        auto mesh = m_sphereModel.meshes[0];
         rlEnableVertexArray(mesh.vaoId);
         rlDrawVertexArrayInstanced(0, mesh.vertexCount, m_particleData->count);
+        //rlDrawVertexArrayElementsInstanced(0, mesh.triangleCount * 3, nullptr, m_particleData->count);
         rlEnableVertexArray(0);
 
-        /*
-        rlDisableBackfaceCulling();
-        int renderingType = BOX_TYPE;
-        SetShaderValue(m_shader, m_renderingTypeLoc, &renderingType, SHADER_UNIFORM_INT);
-        auto& mesh = m_cubeModel.meshes[0];
-        auto& indices = m_cubeModel.meshes[0].indices;
+        int boxRenderingType = BOX_TYPE;
+        SetShaderValue(m_shader, m_renderingTypeLoc, &boxRenderingType, SHADER_UNIFORM_INT);
+        mesh = m_cubeModel.meshes[0];
         rlEnableVertexArray(mesh.vaoId);
-        //rlDrawVertexArrayInstanced(0, mesh.vertexCount, m_particleData->count);
         rlDrawVertexArrayElementsInstanced(0, mesh.triangleCount * 3, nullptr, m_particleData->count);
         rlEnableVertexArray(0);
-        rlEnableBackfaceCulling();
-        */
     }
     EndShaderMode();
 }
@@ -140,7 +135,7 @@ void Renderer::drawPlane(Plane plane) {
 }
 
 void Renderer::generateCubeMesh() {
-    Mesh mesh   = GenMeshCube(1, 1, 1);
+    Mesh mesh   = GenMeshCube(2, 2, 2);
     m_cubeModel = LoadModelFromMesh(mesh);
 
     auto image   = GenImageColor(1, 1, WHITE);

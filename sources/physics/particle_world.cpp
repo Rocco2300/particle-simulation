@@ -121,7 +121,7 @@ void ParticleWorld::buildBoxWorld(int particleNo) {
                 }
 
                 addParticle(
-                        SPHERE_TYPE,
+                        BOX_TYPE,
                         0.125f,
                         {x, y, z},
                         getRandomDirection() * 20.f,
