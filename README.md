@@ -8,6 +8,31 @@ I structured the data into a SoA layout to reduce cache misses and used instance
 
 Additionally, we were assigned another project that required building an MMO server with physics integration. To cut down on the implementation time, I created DLL based API, which I then used in the [MMO Server](https://github.com/Rocco2300/mmo-server)
 
+## Performance
+
+### 1000 Particles:
+
+| Type | Partitioning | FPS  |
+|------|--------------|------|
+| CPU  | NO           | 160  |
+| CPU  | YES          | 1300 |
+| GPU  | NO           | 1700 |
+| GPU  | YES          | 40   |
+
+### 4913 Particles:
+
+| Type | Partitioning | FPS  |
+|------|--------------|------|
+| CPU  | NO           | 7    |
+| CPU  | YES          | 120  |
+| GPU  | NO           | 410  |
+| GPU  | YES          | 1400 |
+
+These results are approximate estimations of the observed average, as such they are in no way a good benchmark. I have measured and added them for the purpose of the assignment. 
+
+The results do still show some interesting facts about the program. The GPU simulation seems to run slower with 1000 particles than with 4913 particles. The cause of this might be the overhead of the grid partitioning code, or a issue with its implementation. While "benchmarking" I have also noticed a bug on the GPU partitioned simulation, this could be the cause of the discrepancy, but I haven't tested it... 
+
+
 ## Requirements
 
 - CMake 3.20 or higher
@@ -37,7 +62,7 @@ cmake --build .
 
 You can now run the project with the following command:
 ```
-./particle-simulation.exe <mode>
+./particle-simulation.exe <mode [--cpu|--gpu]> <--partition> <particleNo>
 ```
 
 These are the controls:
