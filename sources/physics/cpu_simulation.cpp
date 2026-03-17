@@ -227,9 +227,9 @@ bool CPUSimulation::isCollidingParticle(Particle p1, Particle p2) {
         return isCollidingBoxSphere(p1, p2);
     }
 
-    //if (type2 == BOX_TYPE) {
-    //    return isCollidingBoxSphere(p2, p1);
-    //}
+    if (type2 == BOX_TYPE) {
+        return isCollidingBoxSphere(p2, p1);
+    }
 
     return false;
 }
@@ -250,10 +250,6 @@ void CPUSimulation::solveBoxBoxPenetration(Particle p1, Particle p2) {
 
     //pos1 += overlap * -(1.0f / 2.0f + 0.0001f);
     pos1 += normal * (-distance / 2.0f + 0.0001f);
-    //if (!m_spatialPartition) {
-    //    //pos2 += overlap * (1.0f / 2.0f + 0.0001f);
-    //    pos2 += normal * (distance / 2.0f + 0.0001f);
-    //}
 }
 
 void CPUSimulation::solveBoxSpherePenetration(Particle p1, Particle p2) {
@@ -281,10 +277,6 @@ void CPUSimulation::solveBoxSpherePenetration(Particle p1, Particle p2) {
 
     //boxPos += overlap * -(1.0f / 2.0f + 0.0001f);
     boxPos += normal * (-distance / 2.0f + 0.0001f);
-    //if (!m_spatialPartition) {
-    //    //spherePos += overlap * (1.0f / 2.0f + 0.0001f);
-    //    spherePos += normal * (distance / 2.0f + 0.0001f);
-    //}
 }
 
 void CPUSimulation::solveSphereSpherePenetration(Particle p1, Particle p2) {
@@ -305,9 +297,6 @@ void CPUSimulation::solveSphereSpherePenetration(Particle p1, Particle p2) {
     auto moveAmount = rad1 + rad2 - distance;
 
     pos1 += normal * -(moveAmount / 2.0f + 0.0001f);
-    //if (!m_spatialPartition) {
-    //    pos2 += normal * (moveAmount / 2.0f + 0.0001f);
-    //}
 }
 
 void CPUSimulation::solveParticlePenetration(Particle p1, Particle p2) {
@@ -326,6 +315,11 @@ void CPUSimulation::solveParticlePenetration(Particle p1, Particle p2) {
 
     if (type1 == BOX_TYPE) {
         solveBoxSpherePenetration(p1, p2);
+        return;
+    }
+
+    if (type2 == BOX_TYPE) {
+        solveBoxSpherePenetration(p2, p1);
         return;
     }
 }
@@ -358,7 +352,6 @@ void CPUSimulation::resolveParticleCollisionsSimple(Particle particle) {
             solveParticlePenetration(i, particle);
 
             vel1 = glm::reflect(vel1, normal) * 0.95f;
-            vel2 = glm::reflect(vel2, normal) * 0.95f;
         }
     }
 }
