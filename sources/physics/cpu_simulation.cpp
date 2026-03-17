@@ -227,11 +227,7 @@ bool CPUSimulation::isCollidingParticle(Particle p1, Particle p2) {
         return isCollidingBoxSphere(p1, p2);
     }
 
-    if (type2 == BOX_TYPE) {
-        return isCollidingBoxSphere(p2, p1);
-    }
-
-    return false;
+    return isCollidingBoxSphere(p2, p1);
 }
 
 void CPUSimulation::solveBoxBoxPenetration(Particle p1, Particle p2) {
@@ -318,10 +314,7 @@ void CPUSimulation::solveParticlePenetration(Particle p1, Particle p2) {
         return;
     }
 
-    if (type2 == BOX_TYPE) {
-        solveBoxSpherePenetration(p2, p1);
-        return;
-    }
+    solveBoxSpherePenetration(p2, p1);
 }
 
 void CPUSimulation::resolvePlaneCollisions(Particle particle) {
