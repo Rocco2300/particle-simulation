@@ -182,10 +182,6 @@ void CPUSimulation::solveParticlePenetration(Particle p1, Particle p2) {
     auto moveAmount = rad1 + rad2 - distance;
 
     pos1 += normal * -((moveAmount / 2.0f) + 0.0001f);
-
-    if (!m_spatialPartition) {
-        pos2 += normal * ((moveAmount / 2.0f) + 0.0001f);
-    }
 }
 
 void CPUSimulation::resolvePlaneCollisions(Particle particle) {
@@ -216,7 +212,6 @@ void CPUSimulation::resolveParticleCollisionsSimple(Particle particle) {
             solveParticlePenetration(i, particle);
 
             vel1 = glm::reflect(vel1, normal) * 0.95f;
-            vel2 = glm::reflect(vel2, normal) * 0.95f;
         }
     }
 }
