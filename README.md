@@ -70,7 +70,3 @@ These are the controls:
 - Z - to lock/unlock camera
 - C - add an impulse to all the particles
 - X - add particles
-
-Where you can replace mode with:
-- `--gpu` to simulate the world on the GPU
-- `--cpu` to simulate the world on the CPU
