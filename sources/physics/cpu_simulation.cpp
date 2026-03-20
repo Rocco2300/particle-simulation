@@ -231,6 +231,7 @@ bool CPUSimulation::isCollidingParticle(Particle p1, Particle p2) {
 }
 
 void CPUSimulation::solveBoxBoxPenetration(Particle p1, Particle p2) {
+    // TODO: this is kind of iffy, since it doesn't take into account the size of the box
     auto& pos1 = m_particleData->position[p1];
     auto& pos2 = m_particleData->position[p2];
     auto& rad1 = m_particleData->radius[p1];
@@ -249,6 +250,7 @@ void CPUSimulation::solveBoxBoxPenetration(Particle p1, Particle p2) {
 }
 
 void CPUSimulation::solveBoxSpherePenetration(Particle p1, Particle p2) {
+    // TODO: this is kind of iffy, since it doesn't take into account the size of the sphere
     auto& boxPos       = m_particleData->position[p1];
     auto& spherePos    = m_particleData->position[p2];
     auto& boxSize      = m_particleData->radius[p1];

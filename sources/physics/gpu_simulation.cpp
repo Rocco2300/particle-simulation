@@ -175,10 +175,11 @@ void GPUSimulation::gpuResolveParticleCollisions() {
     auto partitionLoc     = rlGetLocationUniform(m_particleCollisionsProgram, "partitionSpace");
     auto particleCountLoc = rlGetLocationUniform(m_particleCollisionsProgram, "particleCount");
 
-    rlBindShaderBuffer(global.particles.radiusSSBO, 0);
-    rlBindShaderBuffer(global.particles.positionSSBO, 1);
-    rlBindShaderBuffer(global.particles.velocitySSBO, 2);
-    rlBindShaderBuffer(global.particles.gridSSBO, 3);
+    rlBindShaderBuffer(global.particles.typeSSBO, 0);
+    rlBindShaderBuffer(global.particles.radiusSSBO, 1);
+    rlBindShaderBuffer(global.particles.positionSSBO, 2);
+    rlBindShaderBuffer(global.particles.velocitySSBO, 3);
+    rlBindShaderBuffer(global.particles.gridSSBO, 4);
 
     int spatialPartition = m_spatialPartition;
     rlSetUniform(partitionLoc, &spatialPartition, SHADER_UNIFORM_INT, 1);

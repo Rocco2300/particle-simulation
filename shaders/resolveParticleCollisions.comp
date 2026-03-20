@@ -5,6 +5,8 @@ layout (local_size_x = 32, local_size_y = 1, local_size_z = 1) in;
 #define MAX_PARTICLES 5000
 #define GRID_SIZE 12 * 12 * 12
 #define CELL_SIZE 100
+#define BOX_TYPE 1
+#define SPHERE_TYPE 0
 
 struct Cell {
     int count;
@@ -14,23 +16,57 @@ struct Cell {
 uniform int particleCount;
 uniform int partitionSpace;
 
-layout(std430, binding = 0) buffer radii {
+layout(std430, binding = 0) buffer types {
+    int type[MAX_PARTICLES];
+};
+
+layout(std430, binding = 1) buffer radii {
     float radius[MAX_PARTICLES];
 };
 
-layout(std430, binding = 1) buffer positions {
+layout(std430, binding = 2) buffer positions {
     vec3 position[MAX_PARTICLES];
 };
 
-layout(std430, binding = 2) buffer velocities {
+layout(std430, binding = 3) buffer velocities {
     vec3 velocity[MAX_PARTICLES];
 };
 
-layout(std430, binding = 3) buffer grid {
+layout(std430, binding = 4) buffer grid {
     Cell cells[GRID_SIZE];
 };
 
-bool isCollidingParticle(int p1, int p2) {
+bool isCollidingBoxBox(int p1, int p2) {
+    vec3 pos1 = position[p1];
+    vec3 pos2 = position[p2];
+    float rad1 = radius[p1];
+    float rad2 = radius[p2];
+
+    float xDistance = abs(pos1.x - pos2.x);
+    float yDistance = abs(pos1.y - pos2.y);
+    float zDistance = abs(pos1.z - pos2.z);
+
+    bool xOverlap = xDistance <= rad1 + rad2;
+    bool yOverlap = yDistance <= rad1 + rad2;
+    bool zOverlap = zDistance <= rad1 + rad2;
+
+    return xOverlap && yOverlap && zOverlap;
+}
+
+bool isCollidingBoxSphere(int p1, int p2) {
+    vec3 boxPos = position[p1];
+    vec3 spherePos = position[p2];
+    float boxSize = radius[p1];
+    float sphereRadius = radius[p2];
+
+    vec3 minPos = boxPos - vec3(1.0) * boxSize;
+    vec3 maxPos = boxPos + vec3(1.0) * boxSize;
+    vec3 clampedPos = clamp(spherePos, minPos, maxPos);
+
+    return distance(spherePos, clampedPos) < sphereRadius;
+}
+
+bool isCollidingSphereSphere(int p1, int p2) {
     float rad1 = radius[p1];
     float rad2 = radius[p2];
     vec3 pos1 = position[p1];
@@ -40,7 +76,63 @@ bool isCollidingParticle(int p1, int p2) {
     return distance < rad1 + rad2;
 }
 
-void solveParticlePenetration(int p1, int p2) {
+bool isCollidingParticle(int p1, int p2) {
+    int type1 = type[p1];
+    int type2 = type[p2];
+
+    if (type1 == BOX_TYPE && type2 == BOX_TYPE) {
+        return isCollidingBoxBox(p1, p2);
+    }
+
+    if (type1 == SPHERE_TYPE && type2 == SPHERE_TYPE) {
+        return isCollidingSphereSphere(p1, p2);
+    }
+
+    if (type1 == BOX_TYPE) {
+        return isCollidingBoxSphere(p1, p2);
+    }
+
+    return isCollidingBoxSphere(p2, p1);
+}
+
+void solveBoxBoxPenetration(int p1, int p2) {
+    vec3 pos1 = position[p1];
+    vec3 pos2 = position[p2];
+
+    float xOverlap = pos2.x - pos1.x;
+    float yOverlap = pos2.y - pos1.y;
+    float zOverlap = pos2.z - pos1.z;
+
+    vec3 overlap = vec3(xOverlap, yOverlap, zOverlap);
+    vec3 normal  = normalize(overlap);
+    float distance = length(overlap);
+
+    pos1 += normal * (-distance / 2.0 + 0.0001);
+    position[p1] = pos1;
+}
+
+void solveBoxSpherePenetration(int p1, int p2) {
+    vec3 boxPos = position[p1];
+    vec3 spherePos = position[p2];
+    float boxSize = radius[p1];
+
+    vec3 minPos = boxPos - vec3(1.0) * boxSize;
+    vec3 maxPos = boxPos + vec3(1.0) * boxSize;
+    vec3 clampedPos = clamp(spherePos, minPos, maxPos);
+
+    float distance = length(spherePos - clampedPos);
+    if (distance == 0.0) {
+        spherePos += vec3(0.01, 0.01, -0.01);
+        distance = length(spherePos - clampedPos);
+    }
+
+    vec3 normal = normalize(spherePos - clampedPos);
+
+    boxPos += normal * (-distance / 2.0 + 0.0001);
+    position[p1] = boxPos;
+}
+
+void solveSphereSpherePenetration(int p1, int p2) {
     float rad1 = radius[p1];
     float rad2 = radius[p2];
     vec3 pos1 = position[p1];
@@ -55,6 +147,28 @@ void solveParticlePenetration(int p1, int p2) {
 
     position[p1] = pos1;
     //position[p2] = pos2;
+}
+
+void solveParticlePenetration(int p1, int p2) {
+    int type1 = type[p1];
+    int type2 = type[p2];
+
+    if (type1 == BOX_TYPE && type2 == BOX_TYPE) {
+        solveBoxBoxPenetration(p1, p2);
+        return;
+    }
+
+    if (type1 == SPHERE_TYPE && type2 == SPHERE_TYPE) {
+        solveSphereSpherePenetration(p1, p2);
+        return;
+    }
+
+    if (type1 == BOX_TYPE) {
+        solveBoxSpherePenetration(p1, p2);
+        return;
+    }
+
+    solveBoxSpherePenetration(p2, p1);
 }
 
 ivec3 getTriIndex(int particle) {
